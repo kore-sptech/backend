@@ -13,4 +13,13 @@ public record UsuarioDTO(
         @Size(min = 5, max = 30)
         String senha
 ) {
+
+        @Override
+        public String toString() {
+                return "UsuarioDTO{" +
+                        "email='" + email + '\'' +
+                        ", nome='" + nome + '\'' +
+                        ", senha='" + senha + '\'' +
+                        '}';
+        }
 }

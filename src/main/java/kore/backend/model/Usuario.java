@@ -7,15 +7,26 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "XXXXXXXXXXXXX")
+@Table(name = "xxxxxxxxxxxxx")
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
-    @Column(nullable = false)
+    @Column(name = "nome")
     private String nome;
-    @Column(nullable = false)
+    @Column(name = "email")
     private String email;
-    @Column(nullable = false)
+    @Column(name = "senha")
     private String senha;
+
+    @Override
+    public String toString() {
+        return "Usuario{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", email='" + email + '\'' +
+                ", senha='" + senha + '\'' +
+                '}';
+    }
 }
