@@ -1,5 +1,6 @@
 package handler;
 
+import exception.CredencialExistenteException;
 import exception.RecursoNaoEncontradoException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,6 +11,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExeptionHandler {
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     public ResponseEntity<?> handleNotFound() {
-        return ResponseEntity.notFound().build();  // 404
+        return ResponseEntity.notFound().build();// 404
     }
+    @ExceptionHandler(CredencialExistenteException.class)
+    public ResponseEntity<?> handleExistente(){
+        return ResponseEntity.status(409).build(); // conflict
+    }
+
 }
