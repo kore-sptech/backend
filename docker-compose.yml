@@ -1,0 +1,12 @@
+services:
+  database:
+    image: mysql:9
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_DATABASE: test
+    ports:
+      - "3306:3306"
+    volumes:
+      - MYSQL_DATA:/var/lib/mysql
+volumes:
+  MYSQL_DATA:
