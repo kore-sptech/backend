@@ -1,5 +1,6 @@
 package kore.backend.service;
 
+import exception.RecursoNaoEncontradoException;
 import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.UsuarioDTO;
 import kore.backend.model.Usuario;
@@ -23,7 +24,7 @@ public class UsuarioService {
         return usuarioRepository.save(p);
     }
     public Usuario buscar(Long id){
-        return usuarioRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        return usuarioRepository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado", id));
     }
 
     @Transactional
