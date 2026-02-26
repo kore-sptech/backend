@@ -1,5 +1,8 @@
 package exception;
 
+import lombok.Getter;
+
+@Getter
 public class CredencialExistenteException extends RuntimeException {
     private final String recurso;
     private final String campo;
@@ -10,4 +13,6 @@ public class CredencialExistenteException extends RuntimeException {
         this.campo = "email";
         this.valor = email;
     }
+
+
 }
