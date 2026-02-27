@@ -1,4 +1,4 @@
-package exception;
+package kore.backend.exception;
 
 import lombok.Getter;
 

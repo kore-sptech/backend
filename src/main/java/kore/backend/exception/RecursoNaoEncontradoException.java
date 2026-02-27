@@ -1,4 +1,4 @@
-package exception;
+package kore.backend.exception;
 
 public class RecursoNaoEncontradoException extends RuntimeException {
     private final String recurso;

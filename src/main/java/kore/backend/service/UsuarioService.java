@@ -1,7 +1,7 @@
 package kore.backend.service;
 
-import exception.CredencialExistenteException;
-import exception.RecursoNaoEncontradoException;
+import kore.backend.exception.CredencialExistenteException;
+import kore.backend.exception.RecursoNaoEncontradoException;
 import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.UsuarioDTO;
 import kore.backend.model.Usuario;
