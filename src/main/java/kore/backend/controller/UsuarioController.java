@@ -17,13 +17,13 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
-    @PostMapping
+    /*@PostMapping
     public ResponseEntity<Usuario> cadastrar(
              @RequestBody UsuarioDTO usuarioDTO
             ){
         Usuario p = usuarioService.salvar(usuarioDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(p);
-    }
+    }*/
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> buscar(
             @PathVariable Long id){
