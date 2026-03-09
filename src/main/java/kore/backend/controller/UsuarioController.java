@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@CrossOrigin(origins = "*") 
+@CrossOrigin(origins = "*")
 @RequestMapping("/usuarios")
 public class UsuarioController {
     private final UsuarioService usuarioService;
@@ -19,30 +21,37 @@ public class UsuarioController {
 
     @PostMapping
     public ResponseEntity<Usuario> cadastrar(
-             @RequestBody UsuarioDTO usuarioDTO
-            ){
+            @RequestBody UsuarioDTO usuarioDTO
+    ) {
         Usuario p = usuarioService.salvar(usuarioDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(p);
     }
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> buscar(
-            @PathVariable Long id){
+            @PathVariable Long id) {
         Usuario p = usuarioService.buscar(id);
         return ResponseEntity.ok(p);
     }
+
+    @GetMapping()
+    public ResponseEntity<List<Usuario>> buscartodos() {
+        List<Usuario> p = usuarioService.buscartodos();
+        return ResponseEntity.ok(p);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> atualizar
-    (
-            @PathVariable Long id,
-            @RequestBody UsuarioDTO usuarioDTO
-            ){
+            (
+                    @PathVariable Long id,
+                    @RequestBody UsuarioDTO usuarioDTO
+            ) {
         Usuario p = usuarioService.atualizar(usuarioDTO, id);
         return ResponseEntity.ok(p);
     }
     @DeleteMapping("/{id}")
-     public ResponseEntity<Void> deletar(
-             @PathVariable Long id
-    ){
+    public ResponseEntity<Void> deletar(
+            @PathVariable Long id
+    ) {
         usuarioService.deletar(id);
         return ResponseEntity.noContent().build();
     }
