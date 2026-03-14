@@ -33,15 +33,17 @@ public class UsuarioService {
     }
 
     public Usuario buscar(Long id) {
-        return usuarioRepository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado", id));
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado", id));
     }
-
 
     @Transactional
     public Usuario atualizar(UsuarioDTO usuarioDTO, Long id) {
-        Usuario p = usuarioRepository.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado", id));
+        Usuario p = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado", id));
 
-        if (usuarioRepository.buscarEmail(usuarioDTO.email()) != null && !usuarioRepository.buscarEmail(usuarioDTO.email()).getId().equals(id)) {
+        if (usuarioRepository.buscarEmail(usuarioDTO.email()) != null
+                && !usuarioRepository.buscarEmail(usuarioDTO.email()).getId().equals(id)) {
             throw new CredencialExistenteException("E-mail já cadastrado.", usuarioDTO.email());
         }
 
@@ -61,5 +63,16 @@ public class UsuarioService {
 
     public List<Usuario> buscartodos() {
         return this.usuarioRepository.findAll();
+    }
+
+    public Usuario login(String email, String senha) {
+        Usuario usuario = this.usuarioRepository.findByEmail(email).orElseThrow(
+                () -> new RecursoNaoEncontradoException("Usuário não encontrado", 1L));
+
+        if (!usuario.getSenha().equals(senha)) {
+            throw new RecursoNaoEncontradoException("Senha incorreta", 1L);
+        }
+
+        return usuario;
     }
 }
