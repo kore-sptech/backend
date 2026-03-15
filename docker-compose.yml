@@ -6,6 +6,7 @@ services:
       MYSQL_DATABASE: test
     ports:
       - "3306:3306"
+    command: --bind-address=0.0.0.0
     volumes:
       - MYSQL_DATA:/var/lib/mysql
 volumes:
