@@ -23,7 +23,7 @@ import kore.backend.model.Transacao;
 import kore.backend.service.TransacaoService;
 
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/transacoes")
 public class TransacaoController {
 
