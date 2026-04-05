@@ -39,9 +39,10 @@ CREATE TABLE IF NOT EXISTS Sessao (
 -- Tabela Item
 CREATE TABLE IF NOT EXISTS Item (
     id_item INT AUTO_INCREMENT PRIMARY KEY,
-    dt_Entrada VARCHAR(45) NOT NULL,
-    se_ativo VARCHAR(45) NOT NULL,
-    dt_saida VARCHAR(45) NOT NULL,
+    dt_Entrada DATETIME NOT NULL,
+    se_ativo BOOLEAN NOT NULL,
+    dt_saida DATETIME NOT NULL,
+    vl_unitario FLOAT NOT NULL,
     fk_produto INT,
     fk_sessao INT,
     FOREIGN KEY (fk_produto) REFERENCES Produto(id_produto),

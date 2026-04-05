@@ -9,5 +9,6 @@ services:
     command: --bind-address=0.0.0.0
     volumes:
       - MYSQL_DATA:/var/lib/mysql
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 volumes:
   MYSQL_DATA:
