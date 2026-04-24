@@ -72,7 +72,7 @@ public class UsuarioService {
                 });
 
         usuario.setEmail(usuarioDTO.email());
-        usuario.setSenha(usuarioDTO.senha());
+        usuario.setSenha(passwordEncoder.encode(usuarioDTO.senha()));
         usuario.setNome(usuarioDTO.nome());
 
         return usuarioRepository.save(usuario);
