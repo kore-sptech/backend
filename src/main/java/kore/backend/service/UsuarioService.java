@@ -2,6 +2,7 @@ package kore.backend.service;
 
 import kore.backend.exception.CredencialExistenteException;
 import kore.backend.exception.RecursoNaoEncontradoException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.UsuarioDTO;
 import kore.backend.model.Usuario;
@@ -13,9 +14,11 @@ import java.util.List;
 @Service
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -28,7 +31,7 @@ public class UsuarioService {
         Usuario p = new Usuario();
         p.setEmail(usuarioDTO.email());
         p.setNome(usuarioDTO.nome());
-        p.setSenha(usuarioDTO.senha());
+        p.setSenha(passwordEncoder.encode(usuarioDTO.senha()));
 
         return usuarioRepository.save(p);
     }
