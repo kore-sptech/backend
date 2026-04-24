@@ -21,9 +21,8 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> cadastrar(
-
-            @RequestBody UsuarioDTO usuarioDTO) {
+    public ResponseEntity<Usuario> cadastrar( @RequestBody UsuarioDTO usuarioDTO) {
+        System.out.println("ENTROU NO CONTROLLER");
         Usuario p = usuarioService.salvar(usuarioDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(p);
     }
