@@ -1,4 +1,4 @@
-USE test;
+--USE test;
 
 -- Tabela Produto
 CREATE TABLE IF NOT EXISTS Produto (
