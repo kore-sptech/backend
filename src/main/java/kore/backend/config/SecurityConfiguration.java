@@ -23,7 +23,6 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/usuarios/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/usuarios/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .build();

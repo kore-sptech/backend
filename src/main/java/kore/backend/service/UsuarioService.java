@@ -21,10 +21,10 @@ public class UsuarioService {
     @Transactional
     public Usuario salvar(UsuarioDTO usuarioDTO) {
         //troquei o buscarEmail por findByEmail
-        if (usuarioRepository.findByEmail(usuarioDTO.email()) != null) {
+        if (usuarioRepository.findByEmail(usuarioDTO.email()).isPresent()) {
             throw new CredencialExistenteException("E-mail já cadastrado.", usuarioDTO.email());
         }
-        ;
+
         Usuario p = new Usuario();
         p.setEmail(usuarioDTO.email());
         p.setNome(usuarioDTO.nome());
