@@ -1,6 +1,9 @@
 package kore.backend.controller;
 
 import jakarta.validation.Valid;
+import kore.backend.config.security.TokenService;
+import kore.backend.dto.LoginDTO;
+import kore.backend.dto.LoginResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,19 +27,23 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private TokenService tokenService;
+
     public AuthController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Usuario> login(@RequestBody  @Valid LoginDTO loginDTO) {
+    public ResponseEntity login(@RequestBody  @Valid LoginDTO loginDTO) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.email(), loginDTO.senha());
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
-        Usuario usuario = usuarioService.login(loginDTO.email(), loginDTO.senha());
+        //Usuario usuario = usuarioService.login(loginDTO.email(), loginDTO.senha());
 
-        //mudar essa parte depois, tem que retornar um token e não o usuario
-        return ResponseEntity.ok(usuario);
+        var token = tokenService.generateToken((Usuario) auth.getPrincipal());
+
+        return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
 }
