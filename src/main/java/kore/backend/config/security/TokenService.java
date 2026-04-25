@@ -19,7 +19,6 @@ public class TokenService {
 
     public String generateToken(Usuario usuario){
         try {
-            // garantir que as hashs de senha sejam únicas
             Algorithm algorithm = Algorithm.HMAC256(secret);
             String token = JWT.create()
                     .withIssuer("auth-api")
