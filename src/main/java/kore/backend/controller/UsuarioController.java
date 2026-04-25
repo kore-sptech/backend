@@ -1,6 +1,9 @@
 package kore.backend.controller;
 
+import jakarta.validation.Valid;
 import kore.backend.dto.UsuarioDTO;
+import kore.backend.dto.response.UsuarioResponseDTO;
+import kore.backend.mapper.UsuarioMapper;
 import kore.backend.model.Usuario;
 import kore.backend.service.UsuarioService;
 
@@ -21,31 +24,32 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> cadastrar( @RequestBody UsuarioDTO usuarioDTO) {
-        System.out.println("ENTROU NO CONTROLLER");
+    public ResponseEntity<UsuarioResponseDTO> cadastrar(@RequestBody @Valid UsuarioDTO usuarioDTO) {
         Usuario p = usuarioService.salvar(usuarioDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(p);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(UsuarioMapper.toResponse(p));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscar(
+    public ResponseEntity<UsuarioResponseDTO> buscar(
             @PathVariable Long id) {
         Usuario p = usuarioService.buscar(id);
-        return ResponseEntity.ok(p);
+        return ResponseEntity.ok(UsuarioMapper.toResponse(p));
     }
 
     @GetMapping()
-    public ResponseEntity<List<Usuario>> buscartodos() {
+    public ResponseEntity<List<UsuarioResponseDTO>> buscartodos() {
         List<Usuario> p = usuarioService.buscartodos();
-        return ResponseEntity.ok(p);
+        return ResponseEntity.ok(UsuarioMapper.toResponseList(p));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> atualizar(
+    public ResponseEntity<UsuarioResponseDTO> atualizar(
             @PathVariable Long id,
             @RequestBody UsuarioDTO usuarioDTO) {
         Usuario p = usuarioService.atualizar(usuarioDTO, id);
-        return ResponseEntity.ok(p);
+        return ResponseEntity.ok(UsuarioMapper.toResponse(p));
     }
 
     @DeleteMapping("/{id}")
