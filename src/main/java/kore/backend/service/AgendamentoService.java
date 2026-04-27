@@ -113,14 +113,21 @@ public class AgendamentoService {
         Agendamento agendamento = this.agendamentoRepository.findById(id).orElseThrow(
                 AgendamentoNaoEncondradoException::new);
 
+        List<Foto> fotos = this.fotoRepository.findAllById(request.getReferencias());
+
         // Atualizar os campos do agendamento
         agendamento.setCliente(request.getCliente());
         agendamento.setTelefone(request.getTelefone());
         agendamento.setFormaPagamento(request.getFormaPagamento());
         agendamento.setPreco(request.getPreco());
-        agendamento.setReferencias(this.fotoRepository.findAllById(request.getReferencias()));
+        agendamento.setReferencias(fotos);
         agendamento.setInicio(request.getInicio());
         agendamento.setFim(request.getFim());
+
+        for (Foto foto : fotos)
+            foto.setAgendamento(agendamento);
+
+        this.fotoRepository.saveAll(fotos);
 
         return this.agendamentoRepository.save(agendamento);
     }
