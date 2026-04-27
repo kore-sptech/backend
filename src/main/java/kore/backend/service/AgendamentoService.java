@@ -11,8 +11,11 @@ import java.util.stream.Collectors;
 import kore.backend.repository.FotoRepository;
 import kore.backend.repository.ItemRepository;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.validation.Valid;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.dto.AgendamentoResponseDTO;
 import kore.backend.exception.AgendamentoNaoEncondradoException;
@@ -147,5 +150,23 @@ public class AgendamentoService {
                 .stream()
                 .map(AgendamentoResponseDTO::new)
                 .collect(Collectors.toList());
+    }
+
+    public Agendamento atualizar(Long id, AgendamentoRequestDTO agendamento) {
+
+        Agendamento agendamentoEncontrado = this.agendamentoRepository.findById(id)
+                .orElseThrow(AgendamentoNaoEncondradoException::new);
+
+        List<Foto> fotos = this.fotoRepository.findAllById(agendamento.getReferencias());
+
+        if (fotos.isEmpty()) {
+            throw new IllegalArgumentException("Nenhuma foto encontrada para os IDs fornecidos");
+        }
+
+        agendamentoEncontrado.put(agendamento);
+        agendamentoEncontrado.setReferencias(fotos);
+
+        return agendamentoRepository.save(agendamentoEncontrado);
+
     }
 }

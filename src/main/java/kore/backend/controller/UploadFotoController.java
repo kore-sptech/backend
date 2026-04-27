@@ -25,7 +25,7 @@ public class UploadFotoController {
 
     private final FotoService fotoService;
 
-    private final String UPLOAD_DIR = "./uploads/";
+    private final String UPLOAD_DIR = "../front-end/public/uploads/";
 
     public UploadFotoController(FotoService fotoService) {
         this.fotoService = fotoService;
@@ -40,11 +40,11 @@ public class UploadFotoController {
                 dir.mkdirs();
 
             // Save file locally
-            String fileName = file.getOriginalFilename().concat(UUID.randomUUID().toString());
+            String fileName = UUID.randomUUID().toString().concat(file.getOriginalFilename());
             Path path = Paths.get(UPLOAD_DIR + fileName);
             Files.write(path, file.getBytes());
 
-            FotoRequestDTO request = new FotoRequestDTO(fileName, UPLOAD_DIR.concat(fileName));
+            FotoRequestDTO request = new FotoRequestDTO(fileName, "/public/uploads/".concat(fileName));
             Foto foto = this.fotoService.salvar(request);
 
             return ResponseEntity.ok(foto);

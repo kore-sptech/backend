@@ -1,6 +1,7 @@
 package kore.backend.model;
 
 import jakarta.persistence.*;
+import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.model.enums.FormaPagamento;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,5 +44,14 @@ public class Agendamento {
     private LocalDateTime inicio;
 
     private LocalDateTime fim;
+
+    public void put(AgendamentoRequestDTO agendamento) {
+        this.preco = agendamento.getPreco();
+        this.cliente = agendamento.getCliente();
+        this.telefone = agendamento.getTelefone();
+        this.formaPagamento = agendamento.getFormaPagamento();
+        this.inicio = agendamento.getInicio();
+        this.fim = agendamento.getFim();
+    }
 
 }
