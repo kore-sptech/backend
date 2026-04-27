@@ -2,6 +2,7 @@ package kore.backend.service;
 
 import kore.backend.exception.CredencialExistenteException;
 import kore.backend.exception.RecursoNaoEncontradoException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.UsuarioDTO;
 import kore.backend.model.Usuario;
@@ -13,21 +14,23 @@ import java.util.List;
 @Service
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     public Usuario salvar(UsuarioDTO usuarioDTO) {
-        if (usuarioRepository.buscarEmail(usuarioDTO.email()) != null) {
+        if (usuarioRepository.findByEmail(usuarioDTO.email()).isPresent()) {
             throw new CredencialExistenteException("E-mail já cadastrado.", usuarioDTO.email());
         }
-        ;
+
         Usuario p = new Usuario();
         p.setEmail(usuarioDTO.email());
         p.setNome(usuarioDTO.nome());
-        p.setSenha(usuarioDTO.senha());
+        p.setSenha(passwordEncoder.encode(usuarioDTO.senha()));
 
         return usuarioRepository.save(p);
     }
@@ -39,19 +42,24 @@ public class UsuarioService {
 
     @Transactional
     public Usuario atualizar(UsuarioDTO usuarioDTO, Long id) {
-        Usuario p = usuarioRepository.findById(id)
+
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado", id));
 
-        if (usuarioRepository.buscarEmail(usuarioDTO.email()) != null
-                && !usuarioRepository.buscarEmail(usuarioDTO.email()).getId().equals(id)) {
-            throw new CredencialExistenteException("E-mail já cadastrado.", usuarioDTO.email());
-        }
+        usuarioRepository.findByEmail(usuarioDTO.email())
+                .ifPresent(usuarioExistente -> {
+                    if (!usuarioExistente.getId().equals(id)) {
+                        throw new CredencialExistenteException("E-mail já cadastrado.", usuarioDTO.email());
+                    }
+                });
 
-        p.setEmail(usuarioDTO.email());
-        p.setSenha(usuarioDTO.senha());
-        p.setNome(usuarioDTO.nome());
-        return usuarioRepository.save(p);
+        usuario.setEmail(usuarioDTO.email());
+        usuario.setSenha(passwordEncoder.encode(usuarioDTO.senha()));
+        usuario.setNome(usuarioDTO.nome());
+
+        return usuarioRepository.save(usuario);
     }
+
 
     @Transactional
     public void deletar(Long id) {

@@ -1,4 +1,4 @@
-package kore.backend.controller;
+package kore.backend.dto;
 
 public record LoginDTO(
         String email,

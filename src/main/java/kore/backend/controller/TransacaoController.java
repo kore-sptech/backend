@@ -2,6 +2,7 @@ package kore.backend.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -34,9 +35,9 @@ public class TransacaoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Transacao>> listarTransacoes(
+    public ResponseEntity<Page<Transacao>> listarTransacoes(
             @PageableDefault(size = 4, page = 0, sort = { "id" }, direction = Sort.Direction.DESC) Pageable pageable) {
-        List<Transacao> transacoes = transacaoService.listarTransacoes(pageable);
+        Page<Transacao> transacoes = transacaoService.listarTransacoes(pageable);
         return ResponseEntity.ok(transacoes);
     }
 
