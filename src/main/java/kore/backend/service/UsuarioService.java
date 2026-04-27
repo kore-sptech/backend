@@ -20,7 +20,7 @@ public class UsuarioService {
 
     @Transactional
     public Usuario salvar(UsuarioDTO usuarioDTO) {
-        if (usuarioRepository.buscarEmail(usuarioDTO.email()) != null) {
+        if (usuarioRepository.findByEmail(usuarioDTO.email()).isPresent()) {
             throw new CredencialExistenteException("E-mail já cadastrado.", usuarioDTO.email());
         }
         ;

@@ -38,6 +38,12 @@ public class Item {
     @JoinColumn(name = "fk_produto", nullable = false)
     private Produto produto;
 
+    @ManyToOne()
+    @JsonIgnore
+    @JoinColumn(name = "fk_agendamento")
+    private Agendamento agendamento;
+
+
     public Item() {
     }
 
