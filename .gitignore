@@ -1,1 +1,6 @@
 /uploads
+./uploads/*
+
+/uploads
+/target
+/target/*

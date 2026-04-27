@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ItemService {
@@ -25,7 +24,7 @@ public class ItemService {
     }
 
     @Transactional
-    public List<Item> adicionarEstoque(ItemDTO itemDTO, Integer quantidade, Long fkProduto){
+    public List<Item> adicionarEstoque(ItemDTO itemDTO, Integer quantidade, Long fkProduto) {
         Produto produto = produtoRepository.findById(fkProduto)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + fkProduto));
         List<Item> estoque = new ArrayList<>();
@@ -37,18 +36,20 @@ public class ItemService {
 
         return itemRepository.saveAll(estoque);
     }
-    public List<Item> listarEstoque(Long produtoFk){
+
+    public List<Item> listarEstoque(Long produtoFk) {
         List<Item> itens = itemRepository.buscarPorIdDoProduto(produtoFk)
-                        .orElse(Collections.emptyList());;
+                .orElse(Collections.emptyList());
+        ;
         return itens;
     }
+
     @Transactional
-    public void removerEstoque(Long id){
+    public void removerEstoque(Long id) {
         if (!itemRepository.existsById(id)) {
             throw new RecursoNaoEncontradoException("Item não encontrado", id);
         }
         itemRepository.deleteById(id);
     }
-    
 
 }
