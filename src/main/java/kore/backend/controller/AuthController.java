@@ -14,15 +14,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import kore.backend.model.Usuario;
-import kore.backend.service.UsuarioService;
 
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AuthController {
-
-    private final UsuarioService usuarioService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -30,16 +28,13 @@ public class AuthController {
     @Autowired
     private TokenService tokenService;
 
-    public AuthController(UsuarioService usuarioService) {
-        this.usuarioService = usuarioService;
-    }
-
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody LoginDTO loginDTO) {
+    @SecurityRequirements
+    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.email(), loginDTO.senha());
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
-        //Usuario usuario = usuarioService.login(loginDTO.email(), loginDTO.senha());
+        // Usuario usuario = usuarioService.login(loginDTO.email(), loginDTO.senha());
 
         var token = tokenService.generateToken((Usuario) auth.getPrincipal());
 

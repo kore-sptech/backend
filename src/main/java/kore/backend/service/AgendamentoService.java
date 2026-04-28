@@ -159,6 +159,7 @@ public class AgendamentoService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public Agendamento atualizar(Long id, AgendamentoRequestDTO agendamento) {
 
         Agendamento agendamentoEncontrado = this.agendamentoRepository.findById(id)
@@ -172,6 +173,12 @@ public class AgendamentoService {
 
         agendamentoEncontrado.put(agendamento);
         agendamentoEncontrado.setReferencias(fotos);
+
+        for (Foto foto : fotos) {
+            foto.setAgendamento(agendamentoEncontrado);
+        }
+
+        this.fotoRepository.saveAll(fotos);
 
         return agendamentoRepository.save(agendamentoEncontrado);
 
