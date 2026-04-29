@@ -1,5 +1,6 @@
 package kore.backend.controller;
 
+import kore.backend.config.OpenApiConfig;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.dto.AgendamentoResponseDTO;
 import kore.backend.model.Agendamento;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
@@ -24,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/agendamentos")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@SecurityRequirement(name = OpenApiConfig.SECURITY_SCHEMA_NAME)
 public class AgendamentoController {
 
     private final AgendamentoService agendamentoService;
