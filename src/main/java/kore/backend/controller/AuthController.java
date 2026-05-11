@@ -4,18 +4,16 @@ import jakarta.validation.Valid;
 import kore.backend.config.security.TokenService;
 import kore.backend.dto.LoginDTO;
 import kore.backend.dto.LoginResponseDTO;
+import kore.backend.model.Usuario;
+import kore.backend.service.AuthService;
+import kore.backend.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import kore.backend.model.Usuario;
-import kore.backend.service.UsuarioService;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -30,6 +28,9 @@ public class AuthController {
     @Autowired
     private TokenService tokenService;
 
+    @Autowired
+    private AuthService authService;
+
     public AuthController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
@@ -39,11 +40,31 @@ public class AuthController {
         var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.email(), loginDTO.senha());
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
-        //Usuario usuario = usuarioService.login(loginDTO.email(), loginDTO.senha());
+        Usuario usuario = (Usuario) auth.getPrincipal();
+        var token = tokenService.generateToken(usuario);
+        var refreshToken = tokenService.generateRefreshToken(usuario);
 
-        var token = tokenService.generateToken((Usuario) auth.getPrincipal());
-
-        return ResponseEntity.ok(new LoginResponseDTO(token));
+        return ResponseEntity.ok(new LoginResponseDTO(token, refreshToken));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity refresh(@RequestBody Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.badRequest().body("refreshToken é obrigatório");
+        }
+
+        String email = tokenService.validateRefreshToken(refreshToken);
+
+        if (email == null) {
+            return ResponseEntity.status(401).body("Refresh token inválido ou expirado");
+        }
+
+        Usuario usuario = (Usuario) authService.loadUserByUsername(email);
+        var novoToken = tokenService.generateToken(usuario);
+        var novoRefreshToken = tokenService.generateRefreshToken(usuario);
+
+        return ResponseEntity.ok(new LoginResponseDTO(novoToken, novoRefreshToken));
+    }
 }

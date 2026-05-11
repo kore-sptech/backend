@@ -14,20 +14,35 @@ import java.time.ZoneOffset;
 
 @Service
 public class TokenService {
-   @Value("${api.security.token.secret}")
+
+    @Value("${api.security.token.secret}")
     private String secret;
 
-    public String generateToken(Usuario usuario){
+    public String generateToken(Usuario usuario) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-            String token = JWT.create()
+            return JWT.create()
                     .withIssuer("auth-api")
                     .withSubject(usuario.getEmail())
-                    .withExpiresAt(java.util.Date.from(java.time.Instant.now().plusSeconds(3600)))
+                    .withClaim("type", "access")
+                    .withExpiresAt(Instant.now().plusSeconds(3600)) // 1 hora
                     .sign(algorithm);
-            return token;
-        }catch (JWTCreationException exception){
+        } catch (JWTCreationException exception) {
             throw new RuntimeException("Erro ao gerar token JWT", exception);
+        }
+    }
+
+    public String generateRefreshToken(Usuario usuario) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            return JWT.create()
+                    .withIssuer("auth-api")
+                    .withSubject(usuario.getEmail())
+                    .withClaim("type", "refresh")
+                    .withExpiresAt(Instant.now().plusSeconds(604800)) // 7 dias
+                    .sign(algorithm);
+        } catch (JWTCreationException exception) {
+            throw new RuntimeException("Erro ao gerar refresh token JWT", exception);
         }
     }
 
@@ -41,6 +56,21 @@ public class TokenService {
                     .getSubject();
         } catch (JWTVerificationException e) {
             System.out.println(">>> Token inválido: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public String validateRefreshToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            return JWT.require(algorithm)
+                    .withIssuer("auth-api")
+                    .withClaim("type", "refresh")
+                    .build()
+                    .verify(token)
+                    .getSubject();
+        } catch (JWTVerificationException e) {
+            System.out.println(">>> Refresh token inválido: " + e.getMessage());
             return null;
         }
     }
