@@ -11,4 +11,6 @@ public interface FotoRepository extends JpaRepository<Foto, Long> {
     long deleteAllByAgendamento(Agendamento agendamento);
 
     List<Foto> findAllByAgendamento(Agendamento agendamento);
+
+    boolean existsByImageUrl(String imageUrl);
 }

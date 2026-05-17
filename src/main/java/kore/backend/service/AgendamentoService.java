@@ -32,7 +32,7 @@ public class AgendamentoService {
     private final ItemRepository itemRepository;
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FotoRepository fotoRepository,
-            ItemRepository itemRepository) {
+                              ItemRepository itemRepository) {
         this.agendamentoRepository = agendamentoRepository;
         this.fotoRepository = fotoRepository;
         this.itemRepository = itemRepository;
@@ -162,6 +162,8 @@ public class AgendamentoService {
     @Transactional
     public Agendamento atualizar(Long id, AgendamentoRequestDTO agendamento) {
 
+        System.out.println("Referencias recebidas: " + agendamento.getReferencias());
+
         Agendamento agendamentoEncontrado = this.agendamentoRepository.findById(id)
                 .orElseThrow(AgendamentoNaoEncondradoException::new);
 
@@ -172,11 +174,15 @@ public class AgendamentoService {
         }
 
         agendamentoEncontrado.put(agendamento);
+
+        agendamentoEncontrado.setReferencias(null);
         agendamentoEncontrado.setReferencias(fotos);
 
-        for (Foto foto : fotos) {
-            foto.setAgendamento(agendamentoEncontrado);
-        }
+        for (Foto foto : fotos)
+            if (agendamento.getReferencias().contains(foto.getId()))
+                foto.setAgendamento(agendamentoEncontrado);
+            else
+                foto.setAgendamento(null);
 
         this.fotoRepository.saveAll(fotos);
 
