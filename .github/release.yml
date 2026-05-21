@@ -1,0 +1,8 @@
+changelog:
+  categories:
+    - title: 🚀 Novas Funcionalidades
+      labels: [feature] # PRs com label "feature" entram aqui
+    - title: 🐛 Correções
+      labels: [bug] # PRs com label "bug" entram aqui
+    - title: 💡 Problemas Conhecidos
+      labels: [known-issue] # PRs com label "known-issue" entram aqui
