@@ -1,8 +1,10 @@
 changelog:
   categories:
-    - title: 🚀 Novas Funcionalidades
-      labels: [feature] # PRs com label "feature" entram aqui
-    - title: 🐛 Correções
-      labels: [bug] # PRs com label "bug" entram aqui
-    - title: 💡 Problemas Conhecidos
-      labels: [known-issue] # PRs com label "known-issue" entram aqui
+    - title: 🚀 Novas Funcionalidades (New Features)
+      labels: [feature] # PRs com label "feature" entram aqui (o que foi adicionado recentemente)
+    - title: 📈 Melhorias (Improvements)
+      labels: [improvement, enhancement] # PRs com ajustes e otimizações em recursos existentes
+    - title: 🐛 Correções de Bugs (Bug Fixes)
+      labels: [bug] # PRs com erros que foram identificados e resolvidos
+    - title: ⚠️ Problemas Conhecidos (Known Issues)
+      labels: [known-issue] # PRs com erros identificados que estão na fila de espera
