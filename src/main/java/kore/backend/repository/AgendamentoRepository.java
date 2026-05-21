@@ -9,7 +9,7 @@ import kore.backend.model.Agendamento;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
 
-        List<Agendamento> findByInicioGreaterThanEqualAndInicioLessThanOrderByInicioAsc(
+        List<Agendamento> findByInicioGreaterThanEqualAndInicioLessThanOrderByInicioDesc(
                         LocalDateTime inicioInclusivo,
                         LocalDateTime fimExclusivo);
 
