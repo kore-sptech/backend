@@ -4,8 +4,11 @@ import kore.backend.config.OpenApiConfig;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.dto.AgendamentoResponseDTO;
 import kore.backend.model.Agendamento;
+import kore.backend.model.Usuario;
 import kore.backend.service.AgendamentoService;
+import org.apache.catalina.User;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,12 +57,13 @@ public class AgendamentoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Agendamento> atualizar(@PathVariable Long id,
-            @Valid @RequestBody AgendamentoRequestDTO agendamento) {
+                                                 @Valid @RequestBody AgendamentoRequestDTO agendamento) {
         return ResponseEntity.ok(agendamentoService.atualizar(id, agendamento));
     }
 
     @PostMapping
-    public ResponseEntity<Agendamento> criar(@Valid @RequestBody AgendamentoRequestDTO agendamento) {
-        return ResponseEntity.ok(agendamentoService.criar(agendamento));
+    public ResponseEntity<Agendamento> criar(@Valid @RequestBody AgendamentoRequestDTO agendamento, @AuthenticationPrincipal Usuario usuario) {
+        System.out.println(usuario);
+        return ResponseEntity.ok(agendamentoService.criar(agendamento, usuario));
     }
 }

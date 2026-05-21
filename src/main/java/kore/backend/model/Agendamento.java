@@ -41,6 +41,10 @@ public class Agendamento {
     @OneToMany(mappedBy = "agendamento")
     private List<Foto> referencias = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "fk_usuario")
+    private Usuario usuario;
+
     private LocalDateTime inicio;
 
     private LocalDateTime fim;

@@ -8,6 +8,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import kore.backend.model.Usuario;
 import kore.backend.repository.FotoRepository;
 import kore.backend.repository.ItemRepository;
 
@@ -47,7 +48,7 @@ public class AgendamentoService {
         LocalDateTime fimExclusivo = inicioSemana.plusWeeks(1).atStartOfDay();
 
         List<Agendamento> agendamentos = agendamentoRepository
-                .findByInicioGreaterThanEqualAndInicioLessThanOrderByInicioAsc(inicioInclusivo, fimExclusivo);
+                .findByInicioGreaterThanEqualAndInicioLessThanOrderByInicioDesc(inicioInclusivo, fimExclusivo);
 
         return agendamentos.stream()
                 .map(AgendamentoResponseDTO::new)
@@ -55,7 +56,7 @@ public class AgendamentoService {
     }
 
     @Transactional
-    public Agendamento criar(AgendamentoRequestDTO request) {
+    public Agendamento criar(AgendamentoRequestDTO request, Usuario usuario) {
         List<Foto> fotos = this.fotoRepository.findAllById(request.getReferencias());
 
         if (fotos.isEmpty()) {
@@ -94,6 +95,7 @@ public class AgendamentoService {
                 .preco(request.getPreco())
                 .inicio(request.getInicio())
                 .fim(request.getFim())
+                .usuario(usuario)
                 .build();
 
         for (Foto foto : fotos)
@@ -108,29 +110,7 @@ public class AgendamentoService {
         return this.agendamentoRepository.save(agendamento);
     }
 
-    @Transactional
-    public Agendamento editar(Long id, AgendamentoRequestDTO request) {
-        Agendamento agendamento = this.agendamentoRepository.findById(id).orElseThrow(
-                AgendamentoNaoEncondradoException::new);
 
-        List<Foto> fotos = this.fotoRepository.findAllById(request.getReferencias());
-
-        // Atualizar os campos do agendamento
-        agendamento.setCliente(request.getCliente());
-        agendamento.setTelefone(request.getTelefone());
-        agendamento.setFormaPagamento(request.getFormaPagamento());
-        agendamento.setPreco(request.getPreco());
-        agendamento.setReferencias(fotos);
-        agendamento.setInicio(request.getInicio());
-        agendamento.setFim(request.getFim());
-
-        for (Foto foto : fotos)
-            foto.setAgendamento(agendamento);
-
-        this.fotoRepository.saveAll(fotos);
-
-        return this.agendamentoRepository.save(agendamento);
-    }
 
     @Transactional
     public void deletar(
@@ -167,25 +147,57 @@ public class AgendamentoService {
         Agendamento agendamentoEncontrado = this.agendamentoRepository.findById(id)
                 .orElseThrow(AgendamentoNaoEncondradoException::new);
 
-        List<Foto> fotos = this.fotoRepository.findAllById(agendamento.getReferencias());
+        // Validar conflitos de data se as datas foram alteradas
+        if (!agendamento.getInicio().equals(agendamentoEncontrado.getInicio()) ||
+            !agendamento.getFim().equals(agendamentoEncontrado.getFim())) {
 
-        if (fotos.isEmpty()) {
+            if (!agendamento.getFim().isAfter(agendamento.getInicio())) {
+                throw new IllegalArgumentException("Fim do agendamento deve ser após o início");
+            }
+
+            // Verificar conflito apenas com outros agendamentos (ID diferente)
+            List<Agendamento> agendamentosEmConflito = this.agendamentoRepository
+                    .findByInicioBetween(agendamento.getInicio(), agendamento.getFim());
+
+            boolean existeConflitoComOutro = agendamentosEmConflito.stream()
+                    .anyMatch(a -> !a.getId().equals(id));
+
+            if (existeConflitoComOutro) {
+                throw new IllegalArgumentException("Já existe um agendamento nesse horário");
+            }
+        }
+
+        // Buscar as fotos novas
+        List<Foto> fotosNovas = this.fotoRepository.findAllById(agendamento.getReferencias());
+
+        if (fotosNovas.isEmpty()) {
             throw new IllegalArgumentException("Nenhuma foto encontrada para os IDs fornecidos");
         }
 
+        // Atualizar dados do agendamento
         agendamentoEncontrado.put(agendamento);
 
-        agendamentoEncontrado.setReferencias(null);
-        agendamentoEncontrado.setReferencias(fotos);
+        // Gerenciar relacionamentos com fotos
+        List<Foto> fotosAntigas = agendamentoEncontrado.getReferencias();
 
-        for (Foto foto : fotos)
-            if (agendamento.getReferencias().contains(foto.getId()))
-                foto.setAgendamento(agendamentoEncontrado);
-            else
-                foto.setAgendamento(null);
+        // Desassociar fotos que não estão mais na nova lista
+        for (Foto fotoAntiga : fotosAntigas) {
+            if (!fotosNovas.contains(fotoAntiga)) {
+                fotoAntiga.setAgendamento(null);
+                this.fotoRepository.save(fotoAntiga);
+            }
+        }
 
-        this.fotoRepository.saveAll(fotos);
+        // Associar as novas fotos
+        for (Foto fotoNova : fotosNovas) {
+            fotoNova.setAgendamento(agendamentoEncontrado);
+        }
 
+        // Atualizar lista de referências
+        agendamentoEncontrado.setReferencias(fotosNovas);
+
+        // Salvar fotos e agendamento
+        this.fotoRepository.saveAll(fotosNovas);
         return agendamentoRepository.save(agendamentoEncontrado);
 
     }
