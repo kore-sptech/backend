@@ -48,12 +48,7 @@ public class Transacao {
         this.valor = transacaoDTO.valor();
         this.nome = transacaoDTO.nome();
         this.tipo = transacaoDTO.tipo();
-
-        if (transacaoDTO.tipo().equals(TipoTransacao.ENTRADA)) {
-            this.categoria = null;
-        } else {
-            this.categoria = transacaoDTO.categoria();
-        }
+        this.categoria = transacaoDTO.categoria();
     }
 
     @Override
