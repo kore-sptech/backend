@@ -42,6 +42,14 @@ public class Produto {
     public Produto() {
     }
 
+    public Produto(Long id, String nome, String descricao, Boolean possuiValidade, Integer qtdMinAlerta) {
+        this.id = id;
+        this.nome = nome;
+        this.descricao = descricao;
+        this.possuiValidade = possuiValidade;
+        this.qtdMinAlerta = qtdMinAlerta;
+    }
+
     public void adicionarEstoque(List<Item> itens){
         itens.forEach(item -> itens.add(item));
     }
