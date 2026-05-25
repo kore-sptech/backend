@@ -1,12 +1,15 @@
 package kore.backend.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,8 +95,8 @@ public class TransacaoService {
     }
 
     @Transactional
-    public void deletarTransacao(Long id) {
-        this.transacaoRepository.findById(id).orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+        public void deletarTransacao(Long id) {
+            this.transacaoRepository.findById(id).orElseThrow(() -> new RuntimeException("Transação não encontrada"));
         this.transacaoRepository.deleteById(id);
     }
 
@@ -108,5 +111,35 @@ public class TransacaoService {
         transacao.setCategoria(transacaoDTO.categoria());
 
         return this.transacaoRepository.save(transacao);
+    }
+
+    // ALTERADO: Método para buscar transações com filtros
+    @Transactional(readOnly = true)
+    public Page<Transacao> buscarTransacoes(Optional<TipoTransacao> tipo, Optional<LocalDate> dataCriacao,
+            Optional<String> busca, Pageable pageable) {
+        Specification<Transacao> spec = (root, query, cb) -> cb.conjunction();
+
+        if (busca.isPresent()) { // Grupo B
+            try {
+                CategoriaTransacao categoria = CategoriaTransacao.valueOf(busca.get().toUpperCase());
+                spec = spec
+                        .or((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("categoria"), categoria));
+            } catch (IllegalArgumentException e) {
+                spec = spec.or((root, query, criteriaBuilder) -> criteriaBuilder
+                        .like(criteriaBuilder.lower(root.get("nome")), "%" + busca.get().toLowerCase() + "%"));
+            }
+        } else { // Grupo A
+            if (tipo.isPresent()) {
+                spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("tipo"), tipo.get()));
+            }
+            if (dataCriacao.isPresent()) {
+                LocalDate start = dataCriacao.get().atStartOfDay().toLocalDate();
+                LocalDate end = dataCriacao.get().plusDays(1).atStartOfDay().toLocalDate();
+                spec = spec.and(
+                        (root, query, criteriaBuilder) -> criteriaBuilder.between(root.get("dataCriacao"), start, end));
+            }
+        }
+
+        return transacaoRepository.findAll(spec, pageable);
     }
 }
