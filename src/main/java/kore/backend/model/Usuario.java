@@ -16,6 +16,7 @@ import java.util.List;
 @Table(name = "Usuario")
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Usuario implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +31,9 @@ public class Usuario implements UserDetails {
 
     @Column(name = "senha")
     private String senha;
+
+    @OneToMany(mappedBy = "usuario")
+    private List<Transacao> transacoes = new ArrayList<>();
 
     @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
     private List<Agendamento> agendamentos = new ArrayList<>();
@@ -68,7 +72,6 @@ public class Usuario implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
 
     @Override
     public String toString() {
