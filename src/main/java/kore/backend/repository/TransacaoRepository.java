@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor; // ALTERADO: Importando JpaSpecificationExecutor
 
@@ -16,8 +15,6 @@ public interface TransacaoRepository extends JpaRepository<Transacao, Long>, Jpa
                                                                                                                    // JpaSpecificationExecutor
 
     Page<Transacao> findAll(Pageable pageable);
-
-    Page<Transacao> findByUsuario(Specification<Transacao> spec, Pageable pageable, Usuario usuario);
 
     List<Transacao> findByUsuario(Usuario usuario);
 }

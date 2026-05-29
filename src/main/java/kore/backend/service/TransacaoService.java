@@ -1,6 +1,7 @@
 package kore.backend.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,19 @@ public class TransacaoService {
 
         List<Transacao> transacoes = transacaoRepository.findByUsuario(usuario);
 
-        for (Transacao transacao : transacoes) {
+        // Filtrar apenas transações do mês atual
+        LocalDate now = LocalDate.now();
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime startOfNextMonth = startOfMonth.plusMonths(1);
+
+        List<Transacao> transacoesDoMes = transacoes.stream()
+                .filter(t -> {
+                    LocalDateTime dt = t.getDataCriacao();
+                    return dt != null && !dt.isBefore(startOfMonth) && dt.isBefore(startOfNextMonth);
+                })
+                .collect(Collectors.toList());
+
+        for (Transacao transacao : transacoesDoMes) {
             if (transacao.getTipo().equals(TipoTransacao.ENTRADA)) {
                 totalEntradas += transacao.getValor();
             } else {
@@ -60,7 +73,7 @@ public class TransacaoService {
             saldoAtual = totalEntradas - totalSaidas;
         }
 
-        Map<String, Double> gastosPorCategoria = transacoes.stream()
+        Map<String, Double> gastosPorCategoria = transacoesDoMes.stream()
                 .filter(t -> t.getTipo().equals(TipoTransacao.SAIDA))
                 .collect(Collectors.groupingBy(t -> t.getCategoria().name(),
                         Collectors.summingDouble(Transacao::getValor)));
@@ -79,15 +92,57 @@ public class TransacaoService {
         List<GastoPorCategoria> gastosCalculados = new ArrayList<>();
 
         for (GastoPorCategoria gasto : gastos) {
-            Double percentual = ((double) gasto.valor() / (double) totalSaidas) * 100;
+            Double percentual = 0.0;
+            if (totalSaidas != null && totalSaidas > 0.0) {
+                percentual = (gasto.valor() / totalSaidas) * 100;
+            }
+
             System.out.println("Categoria: " + gasto.categoria() + ", Valor: " + gasto.valor() + ", Percentual: "
                     + percentual);
 
             gastosCalculados.add(new GastoPorCategoria(gasto.categoria(), gasto.valor(), percentual));
         }
 
+        // Calcular métricas do mês passado para comparação
+        LocalDateTime startOfPrevMonth = startOfMonth.minusMonths(1);
+        LocalDateTime startOfCurrentMonth = startOfMonth;
+
+        List<Transacao> transacoesMesPassado = transacoes.stream()
+                .filter(t -> {
+                    LocalDateTime dt = t.getDataCriacao();
+                    return dt != null && !dt.isBefore(startOfPrevMonth) && dt.isBefore(startOfCurrentMonth);
+                })
+                .collect(Collectors.toList());
+
+        Double totalEntradasMesPassado = transacoesMesPassado.stream()
+                .filter(t -> t.getTipo().equals(TipoTransacao.ENTRADA))
+                .mapToDouble(Transacao::getValor)
+                .sum();
+
+        Double totalSaidasMesPassado = transacoesMesPassado.stream()
+                .filter(t -> t.getTipo().equals(TipoTransacao.SAIDA))
+                .mapToDouble(Transacao::getValor)
+                .sum();
+
+        Double variacaoReceita = 0.0;
+        if (totalEntradasMesPassado == 0.0) {
+            variacaoReceita = (totalEntradas == 0.0) ? 0.0 : 100.0;
+        } else {
+            variacaoReceita = ((totalEntradas - totalEntradasMesPassado) / totalEntradasMesPassado) * 100;
+        }
+
+        Double variacaoDespesa = 0.0;
+        if (totalSaidasMesPassado == 0.0) {
+            variacaoDespesa = (totalSaidas == 0.0) ? 0.0 : 100.0;
+        } else {
+            variacaoDespesa = ((totalSaidas - totalSaidasMesPassado) / totalSaidasMesPassado) * 100;
+        }
+
+        MetricasDTO.MetricasMesPassado mesPassado = new MetricasDTO.MetricasMesPassado(variacaoReceita,
+                variacaoDespesa);
+
         MetricasDTO metricas = new MetricasDTO(totalEntradas, totalSaidas, saldoAtual, principalGasto,
-                gastosCalculados);
+                gastosCalculados, mesPassado);
 
         return metricas;
     }
@@ -111,11 +166,10 @@ public class TransacaoService {
         return this.transacaoRepository.save(transacao);
     }
 
-    // ALTERADO: Método para buscar transações com filtros
     @Transactional(readOnly = true)
     public Page<Transacao> buscarTransacoes(Optional<TipoTransacao> tipo, Optional<LocalDate> dataCriacao,
             Optional<String> busca, Pageable pageable, Usuario usuario) {
-        Specification<Transacao> spec = (root, query, cb) -> cb.conjunction();
+        Specification<Transacao> spec = (root, query, cb) -> cb.equal(root.get("usuario"), usuario);
 
         if (busca.isPresent()) { // Grupo B
             spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder
@@ -127,12 +181,12 @@ public class TransacaoService {
         }
 
         if (dataCriacao.isPresent()) {
-            LocalDate start = dataCriacao.get().atStartOfDay().toLocalDate();
-            LocalDate end = dataCriacao.get().plusDays(1).atStartOfDay().toLocalDate();
+            LocalDateTime start = dataCriacao.get().atStartOfDay();
+            LocalDateTime end = dataCriacao.get().plusDays(1).atStartOfDay();
             spec = spec.and(
                     (root, query, criteriaBuilder) -> criteriaBuilder.between(root.get("dataCriacao"), start, end));
         }
 
-        return transacaoRepository.findByUsuario(spec, pageable, usuario);
+        return transacaoRepository.findAll(spec, pageable);
     }
 }
