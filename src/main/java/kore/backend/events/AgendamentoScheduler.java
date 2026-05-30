@@ -21,9 +21,10 @@ public class AgendamentoScheduler {
     public void verificarAgendamentosProximos() {
         LocalDateTime agora = LocalDateTime.now();
 
-        // Janela de ±1 minuto em torno dos 10 minutos — evita tanto perder quanto duplicar
+        // Janela de ±1 minuto em torno dos 10 minutos — evita tanto perder quanto
+        // duplicar
         LocalDateTime janelaInicio = agora.plusMinutes(9);
-        LocalDateTime janelaFim    = agora.plusMinutes(11);
+        LocalDateTime janelaFim = agora.plusMinutes(11);
 
         log.info("Scheduler rodando. Buscando agendamentos entre {} e {}", janelaInicio, janelaFim);
         agendamentoRepository

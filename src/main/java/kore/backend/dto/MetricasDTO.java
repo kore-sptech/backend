@@ -9,7 +9,17 @@ public record MetricasDTO(
                 Double totalSaidas,
                 Double saldoAtual,
                 CategoriaTransacao principalGasto,
-                List<GastoPorCategoria> gastosPorCategoria) {
+                List<GastoPorCategoria> gastosPorCategoria,
+                MetricasMesPassado mesPassado
+
+) {
+
+        public record MetricasMesPassado(
+                        Double variacaoReceita,
+                        Double variacaoDespesa
+
+        ) {
+        }
 
         public record GastoPorCategoria(
                         CategoriaTransacao categoria,
