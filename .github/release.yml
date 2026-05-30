@@ -1,0 +1,16 @@
+changelog:
+  categories:
+    - title: 🚀 Novas Funcionalidades (New Features)
+      labels: [feature]
+
+    - title: 📈 Melhorias (Improvements)
+      labels: [improvement, enhancement]
+
+    - title: 🐛 Correções de Bugs (Bug Fixes)
+      labels: [bug]
+
+    - title: ⚠️ Problemas Conhecidos (Known Issues)
+      labels: [known-issue]
+
+    - title: 📦 Outros
+      labels: ["*"] # captura PRs sem label definida
