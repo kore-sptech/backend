@@ -12,11 +12,9 @@ import kore.backend.model.Usuario;
 import kore.backend.repository.FotoRepository;
 import kore.backend.repository.ItemRepository;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.validation.Valid;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.dto.AgendamentoResponseDTO;
 import kore.backend.exception.AgendamentoNaoEncondradoException;
@@ -33,7 +31,7 @@ public class AgendamentoService {
     private final ItemRepository itemRepository;
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FotoRepository fotoRepository,
-                              ItemRepository itemRepository) {
+            ItemRepository itemRepository) {
         this.agendamentoRepository = agendamentoRepository;
         this.fotoRepository = fotoRepository;
         this.itemRepository = itemRepository;
@@ -110,8 +108,6 @@ public class AgendamentoService {
         return this.agendamentoRepository.save(agendamento);
     }
 
-
-
     @Transactional
     public void deletar(
             Long id) {
@@ -131,16 +127,16 @@ public class AgendamentoService {
         this.agendamentoRepository.delete(agendamento);
     }
 
-    public List<AgendamentoResponseDTO> listarEntreDatas(LocalDateTime inicio, LocalDateTime fim) {
+    public List<AgendamentoResponseDTO> listarEntreDatas(LocalDateTime inicio, LocalDateTime fim, Usuario usuario) {
 
-        return this.agendamentoRepository.findByInicioBetween(inicio, fim)
+        return this.agendamentoRepository.findByInicioBetweenAndUsuario(inicio, fim, usuario)
                 .stream()
                 .map(AgendamentoResponseDTO::new)
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public Agendamento atualizar(Long id, AgendamentoRequestDTO agendamento) {
+    public Agendamento atualizar(Long id, AgendamentoRequestDTO agendamento, Usuario usuario) {
 
         System.out.println("Referencias recebidas: " + agendamento.getReferencias());
 
@@ -149,7 +145,7 @@ public class AgendamentoService {
 
         // Validar conflitos de data se as datas foram alteradas
         if (!agendamento.getInicio().equals(agendamentoEncontrado.getInicio()) ||
-            !agendamento.getFim().equals(agendamentoEncontrado.getFim())) {
+                !agendamento.getFim().equals(agendamentoEncontrado.getFim())) {
 
             if (!agendamento.getFim().isAfter(agendamento.getInicio())) {
                 throw new IllegalArgumentException("Fim do agendamento deve ser após o início");
@@ -157,7 +153,7 @@ public class AgendamentoService {
 
             // Verificar conflito apenas com outros agendamentos (ID diferente)
             List<Agendamento> agendamentosEmConflito = this.agendamentoRepository
-                    .findByInicioBetween(agendamento.getInicio(), agendamento.getFim());
+                    .findByInicioBetweenAndUsuario(agendamento.getInicio(), agendamento.getFim(), usuario);
 
             boolean existeConflitoComOutro = agendamentosEmConflito.stream()
                     .anyMatch(a -> !a.getId().equals(id));

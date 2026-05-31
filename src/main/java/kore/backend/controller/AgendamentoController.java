@@ -6,7 +6,6 @@ import kore.backend.dto.AgendamentoResponseDTO;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Usuario;
 import kore.backend.service.AgendamentoService;
-import org.apache.catalina.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -41,28 +40,28 @@ public class AgendamentoController {
     @GetMapping
     public ResponseEntity<List<AgendamentoResponseDTO>> listar(
             @RequestParam(name = "inicio", required = false) String inicio,
-            @RequestParam(name = "fim", required = false) String fim
+            @RequestParam(name = "fim", required = false) String fim,
+            @AuthenticationPrincipal Usuario usuario
 
     ) {
-
-        // fomato de entrada das datas 2026-04-13T03:00:00.000Z
 
         if (inicio != null && fim != null) {
             return ResponseEntity.ok(agendamentoService.listarEntreDatas(
                     LocalDateTime.parse(inicio, DateTimeFormatter.ISO_DATE_TIME),
-                    LocalDateTime.parse(fim, DateTimeFormatter.ISO_DATE_TIME)));
+                    LocalDateTime.parse(fim, DateTimeFormatter.ISO_DATE_TIME), usuario));
         }
         return ResponseEntity.ok(agendamentoService.listarDaSemana());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Agendamento> atualizar(@PathVariable Long id,
-                                                 @Valid @RequestBody AgendamentoRequestDTO agendamento) {
-        return ResponseEntity.ok(agendamentoService.atualizar(id, agendamento));
+            @Valid @RequestBody AgendamentoRequestDTO agendamento, @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(agendamentoService.atualizar(id, agendamento, usuario));
     }
 
     @PostMapping
-    public ResponseEntity<Agendamento> criar(@Valid @RequestBody AgendamentoRequestDTO agendamento, @AuthenticationPrincipal Usuario usuario) {
+    public ResponseEntity<Agendamento> criar(@Valid @RequestBody AgendamentoRequestDTO agendamento,
+            @AuthenticationPrincipal Usuario usuario) {
         System.out.println(usuario);
         return ResponseEntity.ok(agendamentoService.criar(agendamento, usuario));
     }

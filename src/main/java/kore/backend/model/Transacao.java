@@ -1,8 +1,11 @@
 package kore.backend.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +14,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import kore.backend.dto.TransacaoDTO;
 import kore.backend.model.enums.CategoriaTransacao;
@@ -44,16 +49,17 @@ public class Transacao {
     @CreationTimestamp
     private LocalDateTime dataCriacao;
 
+    @ManyToOne
+    @JoinColumn(name = "idUsuario")
+    @JsonIgnore
+
+    private Usuario usuario;
+
     public Transacao(TransacaoDTO transacaoDTO) {
         this.valor = transacaoDTO.valor();
         this.nome = transacaoDTO.nome();
         this.tipo = transacaoDTO.tipo();
-
-        if (transacaoDTO.tipo().equals(TipoTransacao.ENTRADA)) {
-            this.categoria = null;
-        } else {
-            this.categoria = transacaoDTO.categoria();
-        }
+        this.categoria = transacaoDTO.categoria();
     }
 
     @Override

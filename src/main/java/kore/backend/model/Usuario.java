@@ -6,6 +6,8 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.List;
 @Table(name = "Usuario")
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Usuario implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +34,12 @@ public class Usuario implements UserDetails {
     @Column(name = "senha")
     private String senha;
 
+    @OneToMany(mappedBy = "usuario")
+    @JsonIgnore
+    private List<Transacao> transacoes = new ArrayList<>();
+
     @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
+    @JsonIgnore
     private List<Agendamento> agendamentos = new ArrayList<>();
 
     @Override
@@ -68,7 +76,6 @@ public class Usuario implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
 
     @Override
     public String toString() {
