@@ -45,12 +45,9 @@ public class AgendamentoController {
 
     ) {
 
-        if (inicio != null && fim != null) {
-            return ResponseEntity.ok(agendamentoService.listarEntreDatas(
-                    LocalDateTime.parse(inicio, DateTimeFormatter.ISO_DATE_TIME),
-                    LocalDateTime.parse(fim, DateTimeFormatter.ISO_DATE_TIME), usuario));
-        }
-        return ResponseEntity.ok(agendamentoService.listarDaSemana());
+        return ResponseEntity.ok(agendamentoService.listarEntreDatas(
+                LocalDateTime.parse(inicio, DateTimeFormatter.ISO_DATE_TIME),
+                LocalDateTime.parse(fim, DateTimeFormatter.ISO_DATE_TIME), usuario));
     }
 
     @PutMapping("/{id}")
@@ -62,7 +59,6 @@ public class AgendamentoController {
     @PostMapping
     public ResponseEntity<Agendamento> criar(@Valid @RequestBody AgendamentoRequestDTO agendamento,
             @AuthenticationPrincipal Usuario usuario) {
-        System.out.println(usuario);
         return ResponseEntity.ok(agendamentoService.criar(agendamento, usuario));
     }
 }

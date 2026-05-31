@@ -14,6 +14,11 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
                         LocalDateTime inicioInclusivo,
                         LocalDateTime fimExclusivo);
 
+        boolean existsByInicioLessThanAndFimGreaterThanAndUsuario(
+                        LocalDateTime fimExclusivo,
+                        LocalDateTime inicioExclusivo,
+                        Usuario usuario);
+
         boolean existsByInicioLessThanAndFimGreaterThan(
                         LocalDateTime fimExclusivo,
                         LocalDateTime inicioExclusivo);

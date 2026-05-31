@@ -37,22 +37,6 @@ public class AgendamentoService {
         this.itemRepository = itemRepository;
     }
 
-    @Transactional(readOnly = true)
-    public List<AgendamentoResponseDTO> listarDaSemana() {
-        LocalDate hoje = LocalDate.now();
-
-        LocalDate inicioSemana = hoje.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDateTime inicioInclusivo = inicioSemana.atStartOfDay();
-        LocalDateTime fimExclusivo = inicioSemana.plusWeeks(1).atStartOfDay();
-
-        List<Agendamento> agendamentos = agendamentoRepository
-                .findByInicioGreaterThanEqualAndInicioLessThanOrderByInicioDesc(inicioInclusivo, fimExclusivo);
-
-        return agendamentos.stream()
-                .map(AgendamentoResponseDTO::new)
-                .collect(Collectors.toList());
-    }
-
     @Transactional
     public Agendamento criar(AgendamentoRequestDTO request, Usuario usuario) {
         List<Foto> fotos = this.fotoRepository.findAllById(request.getReferencias());
@@ -77,7 +61,7 @@ public class AgendamentoService {
         }
 
         boolean existeConflitoNaAgenda = this.agendamentoRepository
-                .existsByInicioLessThanAndFimGreaterThan(request.getFim(), request.getInicio());
+                .existsByInicioLessThanAndFimGreaterThanAndUsuario(request.getFim(), request.getInicio(), usuario);
 
         if (existeConflitoNaAgenda) {
             throw new IllegalArgumentException("Já existe um agendamento nesse horário");
