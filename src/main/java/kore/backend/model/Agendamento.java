@@ -3,6 +3,7 @@ package kore.backend.model;
 import jakarta.persistence.*;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.model.enums.FormaPagamento;
+import kore.backend.model.enums.StatusAgendamento;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -48,6 +49,10 @@ public class Agendamento {
     private LocalDateTime inicio;
 
     private LocalDateTime fim;
+
+    @Enumerated(EnumType.STRING)
+    @Column( name = "status_agendamento")
+    private StatusAgendamento statusAgendamento = StatusAgendamento.PENDENTE;
 
     public void put(AgendamentoRequestDTO agendamento) {
         this.preco = agendamento.getPreco();

@@ -23,7 +23,7 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
                         LocalDateTime fimExclusivo,
                         LocalDateTime inicioExclusivo);
 
-        List<Agendamento> findByInicioBetween(
+        List<Agendamento> findByInicioBetweenAndStatusAgendamento_Pendente(
                         LocalDateTime inicio,
                         LocalDateTime fim);
 

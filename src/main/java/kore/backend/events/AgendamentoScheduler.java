@@ -28,7 +28,7 @@ public class AgendamentoScheduler {
 
         log.info("Scheduler rodando. Buscando agendamentos entre {} e {}", janelaInicio, janelaFim);
         agendamentoRepository
-                .findByInicioBetween(janelaInicio, janelaFim)
+                .findByInicioBetweenAndStatusAgendamento_Pendente(janelaInicio, janelaFim)
                 .forEach(agendamento -> {
                     eventPublisher.publishEvent(new AgendamentoProximoEvent(this, agendamento));
                     log.info("Evento publicado para agendamento ID: {}", agendamento.getId());
