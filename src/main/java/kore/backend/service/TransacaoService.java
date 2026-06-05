@@ -1,10 +1,12 @@
 package kore.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import kore.backend.repository.AgendamentoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,9 +24,11 @@ import kore.backend.repository.TransacaoRepository;
 public class TransacaoService {
 
     private final TransacaoRepository transacaoRepository;
+    private final AgendamentoRepository agendamentoRepository;
 
-    public TransacaoService(TransacaoRepository transacaoRepository) {
+    public TransacaoService(TransacaoRepository transacaoRepository, AgendamentoRepository agendamentoRepository) {
         this.transacaoRepository = transacaoRepository;
+        this.agendamentoRepository = agendamentoRepository;
     }
 
     public Page<Transacao> listarTransacoes(Pageable pageable) {
@@ -85,8 +89,16 @@ public class TransacaoService {
             gastosCalculados.add(new GastoPorCategoria(gasto.categoria(), gasto.valor(), percentual));
         }
 
+        LocalDateTime inicioProximoMes = LocalDateTime.now().plusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime fimProximoMes = inicioProximoMes.plusMonths(1);
+
+        Double previsaoProximoMes = agendamentoRepository.findByInicioBetween(inicioProximoMes, fimProximoMes)
+                .stream()
+                .mapToDouble(a -> a.getPreco() != null ? a.getPreco() : 0.0)
+                .sum();
+
         MetricasDTO metricas = new MetricasDTO(totalEntradas, totalSaidas, saldoAtual, principalGasto,
-                gastosCalculados);
+                gastosCalculados, totalEntradas, previsaoProximoMes);
 
         return metricas;
     }
