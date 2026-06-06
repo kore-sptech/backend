@@ -11,7 +11,8 @@ public record MetricasDTO(
                 CategoriaTransacao principalGasto,
                 List<GastoPorCategoria> gastosPorCategoria,
                 Double faturamentoBruto,
-                Double previsaoProximoMes) {
+                Double previsaoProximoMes,
+                Double variacaoPercentual) {
 
         public record GastoPorCategoria(
                         CategoriaTransacao categoria,
@@ -28,6 +29,7 @@ public record MetricasDTO(
                         ", gastosPorCategoria=" + gastosPorCategoria +
                         ", faturamentoBruto=" + faturamentoBruto +
                         ", previsaoProximoMes=" + previsaoProximoMes +
+                        ", variacaoPercentual=" + variacaoPercentual +
                         '}';
         }
 

@@ -97,8 +97,27 @@ public class TransacaoService {
                 .mapToDouble(a -> a.getPreco() != null ? a.getPreco() : 0.0)
                 .sum();
 
+        LocalDateTime inicioMesAtual = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime inicioMesAnterior = inicioMesAtual.minusMonths(1);
+
+        Double entradasMesAtual = transacaoRepository.findByDataCriacaoBetween(inicioMesAtual, LocalDateTime.now())
+                .stream()
+                .filter(t -> t.getTipo().equals(TipoTransacao.ENTRADA))
+                .mapToDouble(Transacao::getValor)
+                .sum();
+
+        Double entradasMesAnterior = transacaoRepository.findByDataCriacaoBetween(inicioMesAnterior, inicioMesAtual)
+                .stream()
+                .filter(t -> t.getTipo().equals(TipoTransacao.ENTRADA))
+                .mapToDouble(Transacao::getValor)
+                .sum();
+
+        Double variacaoPercentual = entradasMesAnterior > 0
+                ? ((entradasMesAtual - entradasMesAnterior) / entradasMesAnterior) * 100
+                : null;
+
         MetricasDTO metricas = new MetricasDTO(totalEntradas, totalSaidas, saldoAtual, principalGasto,
-                gastosCalculados, totalEntradas, previsaoProximoMes);
+                gastosCalculados, totalEntradas, previsaoProximoMes, variacaoPercentual);
 
         return metricas;
     }
