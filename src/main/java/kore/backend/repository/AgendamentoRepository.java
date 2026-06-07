@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import kore.backend.model.Agendamento;
 import kore.backend.model.Usuario;
+import kore.backend.model.enums.StatusAgendamento;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
 
@@ -23,12 +24,18 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
                         LocalDateTime fimExclusivo,
                         LocalDateTime inicioExclusivo);
 
-        List<Agendamento> findByInicioBetweenAndStatusAgendamento_Pendente(
+        List<Agendamento> findByInicioBetweenAndStatusAgendamento(
                         LocalDateTime inicio,
-                        LocalDateTime fim);
+                        LocalDateTime fim,
+                        StatusAgendamento statusAgendamento);
 
         List<Agendamento> findByInicioBetweenAndUsuario(
                         LocalDateTime inicio,
                         LocalDateTime fim,
                         Usuario usuario);
+
+        List<Agendamento> findByInicioBetween(
+                        LocalDateTime inicio,
+                        LocalDateTime fim);
+
 }

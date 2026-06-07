@@ -1,5 +1,6 @@
 package kore.backend.events;
 
+import kore.backend.model.enums.StatusAgendamento;
 import kore.backend.repository.AgendamentoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ public class AgendamentoScheduler {
 
         log.info("Scheduler rodando. Buscando agendamentos entre {} e {}", janelaInicio, janelaFim);
         agendamentoRepository
-                .findByInicioBetweenAndStatusAgendamento_Pendente(janelaInicio, janelaFim)
+                .findByInicioBetweenAndStatusAgendamento(janelaInicio, janelaFim, StatusAgendamento.PENDENTE)
                 .forEach(agendamento -> {
                     eventPublisher.publishEvent(new AgendamentoProximoEvent(this, agendamento));
                     log.info("Evento publicado para agendamento ID: {}", agendamento.getId());
