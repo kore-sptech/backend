@@ -12,7 +12,15 @@ public record MetricasDTO(
                 List<GastoPorCategoria> gastosPorCategoria,
                 Double faturamentoBruto,
                 Double previsaoProximoMes,
-                Double variacaoPercentual) {
+                Double variacaoPercentual,
+                MetricasMesPassado mesPassado) {
+
+        public record MetricasMesPassado(
+                        Double variacaoReceita,
+                        Double variacaoDespesa
+
+        ) {
+        }
 
         public record GastoPorCategoria(
                         CategoriaTransacao categoria,
@@ -22,15 +30,15 @@ public record MetricasDTO(
         @Override
         public String toString() {
                 return "MetricasDTO{" +
-                        "totalEntradas=" + totalEntradas +
-                        ", totalSaidas=" + totalSaidas +
-                        ", saldoAtual=" + saldoAtual +
-                        ", principalGasto=" + principalGasto +
-                        ", gastosPorCategoria=" + gastosPorCategoria +
-                        ", faturamentoBruto=" + faturamentoBruto +
-                        ", previsaoProximoMes=" + previsaoProximoMes +
-                        ", variacaoPercentual=" + variacaoPercentual +
-                        '}';
+                                "totalEntradas=" + totalEntradas +
+                                ", totalSaidas=" + totalSaidas +
+                                ", saldoAtual=" + saldoAtual +
+                                ", principalGasto=" + principalGasto +
+                                ", gastosPorCategoria=" + gastosPorCategoria +
+                                ", faturamentoBruto=" + faturamentoBruto +
+                                ", previsaoProximoMes=" + previsaoProximoMes +
+                                ", variacaoPercentual=" + variacaoPercentual +
+                                '}';
         }
 
 }

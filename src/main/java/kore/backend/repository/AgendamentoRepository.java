@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import kore.backend.model.Agendamento;
+import kore.backend.model.Usuario;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
 
@@ -20,4 +21,9 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
         List<Agendamento> findByInicioBetween(
                         LocalDateTime inicio,
                         LocalDateTime fim);
+
+        List<Agendamento> findByInicioBetweenAndUsuario(
+                        LocalDateTime inicio,
+                        LocalDateTime fim,
+                        Usuario usuario);
 }

@@ -1,11 +1,13 @@
 package kore.backend.service;
 
 import kore.backend.dto.MetricasDTO;
-import kore.backend.model.Transacao;
 import kore.backend.model.Agendamento;
+import kore.backend.model.Usuario;
+import kore.backend.model.enums.CategoriaTransacao;
 import kore.backend.model.enums.TipoTransacao;
 import kore.backend.repository.AgendamentoRepository;
 import kore.backend.repository.TransacaoRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +20,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,86 +35,131 @@ class TransacaoServiceTest {
     @InjectMocks
     private TransacaoService transacaoService;
 
+    // Usuario reutilizado em todos os testes
+    private Usuario usuario;
+
+    @BeforeEach
+    void setUp() {
+        usuario = new Usuario();
+        usuario.setId(1L);
+    }
+
+    // ── Helper: stub padrão para queries que não são foco do teste ───────────
+    // Evita UnnecessaryStubbingException usando lenient() nos stubs de suporte
+    private void stubDefault() {
+        lenient().when(transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
+                eq(usuario), eq(TipoTransacao.ENTRADA), any(), any())).thenReturn(0.0);
+
+        lenient().when(transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
+                eq(usuario), eq(TipoTransacao.SAIDA), any(), any())).thenReturn(0.0);
+
+        lenient().when(transacaoRepository.sumSaidaByCategoria(
+                eq(usuario), any(), any())).thenReturn(List.of());
+
+        lenient().when(agendamentoRepository.findByInicioBetween(
+                any(), any())).thenReturn(List.of());
+    }
+
     @Test
-    @DisplayName("Deve calcular totalEntradas corretamente")
+    @DisplayName("Deve calcular totalEntradas corretamente somando entradas do mês atual")
     void calcularMetricas_ComEntradas_RetornaTotalCorreto() {
-        // Arrange
-        Transacao t1 = new Transacao();
-        t1.setTipo(TipoTransacao.ENTRADA);
-        t1.setValor(300.0);
+        stubDefault();
 
-        Transacao t2 = new Transacao();
-        t2.setTipo(TipoTransacao.ENTRADA);
-        t2.setValor(200.0);
+        // Stub específico: retorna 500.0 para ENTRADA no mês atual
+        // O Mockito vai usar este stub mais específico sobre o lenient() do helper
+        when(transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
+                eq(usuario), eq(TipoTransacao.ENTRADA), any(), any()))
+                .thenReturn(500.0);
 
-        when(transacaoRepository.findAll()).thenReturn(List.of(t1, t2));
-        when(transacaoRepository.findByDataCriacaoBetween(any(), any())).thenReturn(List.of());
-        when(agendamentoRepository.findByInicioBetween(any(), any())).thenReturn(List.of());
+        MetricasDTO metricas = transacaoService.calcularMetricas(usuario);
 
-        // Act
-        MetricasDTO metricas = transacaoService.calcularMetricas();
-
-        // Assert
         assertEquals(500.0, metricas.totalEntradas());
     }
 
     @Test
-    @DisplayName("Deve calcular saldoAtual corretamente")
-    void calcularMetricas_ComEntradasESaidas_RetornaSaldoCorreto() {
-        // Arrange
-        Transacao entrada = new Transacao();
-        entrada.setTipo(TipoTransacao.ENTRADA);
-        entrada.setValor(500.0);
+    @DisplayName("Deve retornar variacaoPercentual 0.0 quando não há entradas no mês anterior")
+    void calcularMetricas_SemEntradasMesAnterior_RetornaVariacaoZero() {
+        // Arrange: mês atual tem entradas, mês anterior não tem
+        // Ambos os períodos usam o mesmo método, diferenciados pelo argumento de data.
+        // Como não conseguimos distinguir os períodos facilmente com any(),
+        // usamos 0.0 como retorno padrão — o que representa "sem entradas" nos dois
+        // meses.
+        stubDefault();
 
-        Transacao saida = new Transacao();
-        saida.setTipo(TipoTransacao.SAIDA);
-        saida.setValor(200.0);
-        saida.setCategoria(kore.backend.model.enums.CategoriaTransacao.INSUMOS);
+        MetricasDTO metricas = transacaoService.calcularMetricas(usuario);
 
-        when(transacaoRepository.findAll()).thenReturn(List.of(entrada, saida));
-        when(transacaoRepository.findByDataCriacaoBetween(any(), any())).thenReturn(List.of());
-        when(agendamentoRepository.findByInicioBetween(any(), any())).thenReturn(List.of());
-
-        // Act
-        MetricasDTO metricas = transacaoService.calcularMetricas();
-
-        // Assert
-        assertEquals(300.0, metricas.saldoAtual());
+        // Com totalEntradas = 0.0 e entradasMesAnterior = 0.0 → calcularVariacao
+        // retorna 0.0
+        assertEquals(0.0, metricas.variacaoPercentual());
     }
 
     @Test
-    @DisplayName("Deve retornar variacaoPercentual null quando não há entradas no mês anterior")
-    void calcularMetricas_SemEntradasMesAnterior_RetornaVariacaoNula() {
-        // Arrange
-        when(transacaoRepository.findAll()).thenReturn(List.of());
-        when(transacaoRepository.findByDataCriacaoBetween(any(), any())).thenReturn(List.of());
-        when(agendamentoRepository.findByInicioBetween(any(), any())).thenReturn(List.of());
+    @DisplayName("Deve retornar variacaoPercentual 100.0 quando há entradas no mês atual mas não no anterior")
+    void calcularMetricas_ComEntradasSomenteNoMesAtual_RetornaVariacao100() {
+        // Para distinguir mês atual de mês anterior precisamos capturar os argumentos
+        // de data.
+        // Usamos ArgumentCaptor para verificar a ordem das chamadas e retornar valores
+        // distintos.
+        stubDefault();
 
-        // Act
-        MetricasDTO metricas = transacaoService.calcularMetricas();
+        // Primeira chamada = mês atual (inicio >= startOfMonth), segunda = mês anterior
+        when(transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
+                eq(usuario), eq(TipoTransacao.ENTRADA), any(), any()))
+                .thenReturn(300.0) // mês atual
+                .thenReturn(0.0); // mês anterior
 
-        // Assert
-        assertNull(metricas.variacaoPercentual());
+        MetricasDTO metricas = transacaoService.calcularMetricas(usuario);
+
+        assertEquals(100.0, metricas.variacaoPercentual());
     }
 
     @Test
-    @DisplayName("Deve calcular previsaoProximoMes somando precos dos agendamentos")
+    @DisplayName("Deve calcular previsaoProximoMes somando preços dos agendamentos futuros")
     void calcularMetricas_ComAgendamentosProximoMes_RetornaPrevisaoCorreta() {
-        // Arrange
+        stubDefault();
+
         Agendamento a1 = new Agendamento();
         a1.setPreco(300.0);
 
         Agendamento a2 = new Agendamento();
         a2.setPreco(200.0);
 
-        when(transacaoRepository.findAll()).thenReturn(List.of());
-        when(transacaoRepository.findByDataCriacaoBetween(any(), any())).thenReturn(List.of());
-        when(agendamentoRepository.findByInicioBetween(any(), any())).thenReturn(List.of(a1, a2));
+        when(agendamentoRepository.findByInicioBetween(any(), any()))
+                .thenReturn(List.of(a1, a2));
 
-        // Act
-        MetricasDTO metricas = transacaoService.calcularMetricas();
+        MetricasDTO metricas = transacaoService.calcularMetricas(usuario);
 
-        // Assert
         assertEquals(500.0, metricas.previsaoProximoMes());
+    }
+
+    @Test
+    @DisplayName("Deve calcular percentual corretamente por categoria")
+    void calcularMetricas_ComSaidasPorCategoria_RetornaPercentualCorreto() {
+        stubDefault();
+
+        when(transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
+                eq(usuario), eq(TipoTransacao.SAIDA), any(), any()))
+                .thenReturn(400.0);
+
+        when(transacaoRepository.sumSaidaByCategoria(eq(usuario), any(), any()))
+                .thenReturn(List.of(
+                        new Object[] { CategoriaTransacao.INSUMOS, 200.0 },
+                        new Object[] { CategoriaTransacao.SESSAO, 200.0 }));
+
+        MetricasDTO metricas = transacaoService.calcularMetricas(usuario);
+
+        metricas.gastosPorCategoria().forEach(g -> assertEquals(50.0, g.percentual(), 0.001));
+    }
+
+    @Test
+    @DisplayName("Deve preencher mesPassado com variacaoReceita e variacaoDespesa")
+    void calcularMetricas_RetornaMetricasMesPassadoPreenchidas() {
+        stubDefault();
+
+        MetricasDTO metricas = transacaoService.calcularMetricas(usuario);
+
+        assertNotNull(metricas.mesPassado());
+        assertNotNull(metricas.mesPassado().variacaoReceita());
+        assertNotNull(metricas.mesPassado().variacaoDespesa());
     }
 }

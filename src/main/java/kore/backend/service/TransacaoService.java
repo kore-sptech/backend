@@ -1,21 +1,23 @@
 package kore.backend.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import kore.backend.repository.AgendamentoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kore.backend.dto.MetricasDTO;
 import kore.backend.dto.TransacaoDTO;
-import kore.backend.dto.MetricasDTO.GastoPorCategoria;
 import kore.backend.model.Transacao;
+import kore.backend.model.Usuario;
 import kore.backend.model.enums.CategoriaTransacao;
 import kore.backend.model.enums.TipoTransacao;
 import kore.backend.repository.TransacaoRepository;
@@ -23,121 +25,160 @@ import kore.backend.repository.TransacaoRepository;
 @Service
 public class TransacaoService {
 
-    private final TransacaoRepository transacaoRepository;
-    private final AgendamentoRepository agendamentoRepository;
+        private final TransacaoRepository transacaoRepository;
+        private final AgendamentoRepository agendamentoRepository;
 
-    public TransacaoService(TransacaoRepository transacaoRepository, AgendamentoRepository agendamentoRepository) {
-        this.transacaoRepository = transacaoRepository;
-        this.agendamentoRepository = agendamentoRepository;
-    }
-
-    public Page<Transacao> listarTransacoes(Pageable pageable) {
-        return transacaoRepository.findAll(pageable);
-    }
-
-    @Transactional
-    public Transacao criarTransacao(TransacaoDTO transacaoDTO) {
-        Transacao transacao = new Transacao(transacaoDTO);
-
-        if (transacao.getValor() <= 0) {
-            throw new RuntimeException("Valor da transação deve ser maior que zero");
+        public TransacaoService(TransacaoRepository transacaoRepository, AgendamentoRepository agendamentoRepository) {
+                this.transacaoRepository = transacaoRepository;
+                this.agendamentoRepository = agendamentoRepository;
         }
 
-        return transacaoRepository.save(transacao);
-    }
+        @Transactional
+        public Transacao criarTransacao(TransacaoDTO transacaoDTO, Usuario usuario) {
+                Transacao transacao = new Transacao(transacaoDTO);
 
-    public MetricasDTO calcularMetricas() {
-        Double totalEntradas = 0.0;
-        Double totalSaidas = 0.0;
-        Double saldoAtual = 0.0;
+                if (transacao.getValor() <= 0) {
+                        throw new RuntimeException("Valor da transação deve ser maior que zero");
+                }
 
-        List<Transacao> transacoes = transacaoRepository.findAll();
-
-        for (Transacao transacao : transacoes) {
-            if (transacao.getTipo().equals(TipoTransacao.ENTRADA)) {
-                totalEntradas += transacao.getValor();
-            } else {
-                totalSaidas += transacao.getValor();
-            }
-
-            saldoAtual = totalEntradas - totalSaidas;
+                transacao.setUsuario(usuario);
+                return transacaoRepository.save(transacao);
         }
 
-        Map<String, Double> gastosPorCategoria = transacoes.stream()
-                .filter(t -> t.getTipo().equals(TipoTransacao.SAIDA))
-                .collect(Collectors.groupingBy(t -> t.getCategoria().name(),
-                        Collectors.summingDouble(Transacao::getValor)));
+        public MetricasDTO calcularMetricas(Usuario usuario) {
 
-        CategoriaTransacao principalGasto = gastosPorCategoria.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .map(CategoriaTransacao::valueOf)
-                .orElse(null);
+                // ── Janelas de tempo ─────────────────────────────────────────────────────
+                LocalDate hoje = LocalDate.now();
+                LocalDateTime inicioMesAtual = hoje.withDayOfMonth(1).atStartOfDay();
+                LocalDateTime inicioProximoMes = inicioMesAtual.plusMonths(1);
+                LocalDateTime inicioMesAnterior = inicioMesAtual.minusMonths(1);
 
-        List<MetricasDTO.GastoPorCategoria> gastos = gastosPorCategoria.entrySet().stream()
-                .map(e -> new MetricasDTO.GastoPorCategoria(CategoriaTransacao.valueOf(e.getKey()), e.getValue(),
-                        0.0))
-                .collect(Collectors.toList());
+                // ── Totais do mês atual via query agregada (sem findAll) ─────────────────
+                Double totalEntradas = Optional.ofNullable(
+                                transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
+                                                usuario, TipoTransacao.ENTRADA, inicioMesAtual, inicioProximoMes))
+                                .orElse(0.0);
 
-        List<GastoPorCategoria> gastosCalculados = new ArrayList<>();
+                Double totalSaidas = Optional.ofNullable(
+                                transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
+                                                usuario, TipoTransacao.SAIDA, inicioMesAtual, inicioProximoMes))
+                                .orElse(0.0);
 
-        for (GastoPorCategoria gasto : gastos) {
-            Double percentual = ((double) gasto.valor() / (double) totalSaidas) * 100;
-            System.out.println("Categoria: " + gasto.categoria() + ", Valor: " + gasto.valor() + ", Percentual: "
-                    + percentual);
+                Double saldoAtual = totalEntradas - totalSaidas;
 
-            gastosCalculados.add(new GastoPorCategoria(gasto.categoria(), gasto.valor(), percentual));
+                // ── Gastos por categoria do mês atual via query agrupada ─────────────────
+                List<Object[]> rawGastos = transacaoRepository
+                                .sumSaidaByCategoria(usuario, inicioMesAtual, inicioProximoMes);
+
+                List<MetricasDTO.GastoPorCategoria> gastosPorCategoria = rawGastos.stream()
+                                .map(row -> {
+                                        CategoriaTransacao categoria = (CategoriaTransacao) row[0];
+                                        Double valor = ((Number) row[1]).doubleValue();
+                                        Double percentual = totalSaidas > 0.0
+                                                        ? (valor / totalSaidas) * 100
+                                                        : 0.0;
+                                        return new MetricasDTO.GastoPorCategoria(categoria, valor, percentual);
+                                })
+                                .collect(Collectors.toList());
+
+                CategoriaTransacao principalGasto = gastosPorCategoria.stream()
+                                .max(Comparator.comparingDouble(MetricasDTO.GastoPorCategoria::valor))
+                                .map(MetricasDTO.GastoPorCategoria::categoria)
+                                .orElse(null);
+
+                // ── faturamentoBruto = total de entradas do mês atual ────────────────────
+                // Semântica: receita bruta realizada no período
+                Double faturamentoBruto = totalEntradas; 
+
+                // ── Previsão do próximo mês via agendamentos ─────────────────────────────
+                LocalDateTime fimProximoMes = inicioProximoMes.plusMonths(1);
+                Double previsaoProximoMes = agendamentoRepository
+                                .findByInicioBetween(inicioProximoMes, fimProximoMes)
+                                .stream()
+                                .mapToDouble(a -> a.getPreco() != null ? a.getPreco() : 0.0)
+                                .sum();
+
+                // ── Totais do mês anterior para comparação ───────────────────────────────
+                Double entradasMesAnterior = Optional.ofNullable(
+                                transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
+                                                usuario, TipoTransacao.ENTRADA, inicioMesAnterior, inicioMesAtual))
+                                .orElse(0.0);
+
+                Double saidasMesAnterior = Optional.ofNullable(
+                                transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
+                                                usuario, TipoTransacao.SAIDA, inicioMesAnterior, inicioMesAtual))
+                                .orElse(0.0);
+
+                // ── Variações percentuais (Regra 1: variacaoPercentual == variacaoReceita)
+                Double variacaoReceita = calcularVariacao(totalEntradas, entradasMesAnterior);
+                Double variacaoDespesa = calcularVariacao(totalSaidas, saidasMesAnterior);
+
+                MetricasDTO.MetricasMesPassado mesPassado = new MetricasDTO.MetricasMesPassado(variacaoReceita,
+                                variacaoDespesa);
+
+                return new MetricasDTO(
+                                totalEntradas,
+                                totalSaidas,
+                                saldoAtual,
+                                principalGasto,
+                                gastosPorCategoria,
+                                faturamentoBruto,
+                                previsaoProximoMes,
+                                variacaoReceita,
+                                mesPassado);
         }
 
-        LocalDateTime inicioProximoMes = LocalDateTime.now().plusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime fimProximoMes = inicioProximoMes.plusMonths(1);
+        private Double calcularVariacao(Double valorAtual, Double valorAnterior) {
+                if (valorAnterior == null || valorAnterior == 0.0) {
+                        return (valorAtual == null || valorAtual == 0.0) ? 0.0 : 100.0;
+                }
+                return ((valorAtual - valorAnterior) / valorAnterior) * 100;
+        }
 
-        Double previsaoProximoMes = agendamentoRepository.findByInicioBetween(inicioProximoMes, fimProximoMes)
-                .stream()
-                .mapToDouble(a -> a.getPreco() != null ? a.getPreco() : 0.0)
-                .sum();
+        @Transactional
+        public void deletarTransacao(Long id) {
+                this.transacaoRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+                this.transacaoRepository.deleteById(id);
+        }
 
-        LocalDateTime inicioMesAtual = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime inicioMesAnterior = inicioMesAtual.minusMonths(1);
+        public Transacao atualizarTransacao(Long id, TransacaoDTO transacaoDTO) {
 
-        Double entradasMesAtual = transacaoRepository.findByDataCriacaoBetween(inicioMesAtual, LocalDateTime.now())
-                .stream()
-                .filter(t -> t.getTipo().equals(TipoTransacao.ENTRADA))
-                .mapToDouble(Transacao::getValor)
-                .sum();
+                Transacao transacao = this.transacaoRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
 
-        Double entradasMesAnterior = transacaoRepository.findByDataCriacaoBetween(inicioMesAnterior, inicioMesAtual)
-                .stream()
-                .filter(t -> t.getTipo().equals(TipoTransacao.ENTRADA))
-                .mapToDouble(Transacao::getValor)
-                .sum();
+                transacao.setValor(transacaoDTO.valor());
+                transacao.setNome(transacaoDTO.nome());
+                transacao.setTipo(transacaoDTO.tipo());
+                transacao.setCategoria(transacaoDTO.categoria());
 
-        Double variacaoPercentual = entradasMesAnterior > 0
-                ? ((entradasMesAtual - entradasMesAnterior) / entradasMesAnterior) * 100
-                : null;
+                return this.transacaoRepository.save(transacao);
+        }
 
-        MetricasDTO metricas = new MetricasDTO(totalEntradas, totalSaidas, saldoAtual, principalGasto,
-                gastosCalculados, totalEntradas, previsaoProximoMes, variacaoPercentual);
+        @Transactional(readOnly = true)
+        public Page<Transacao> buscarTransacoes(Optional<TipoTransacao> tipo, Optional<LocalDate> dataCriacao,
+                        Optional<String> busca, Pageable pageable, Usuario usuario) {
+                Specification<Transacao> spec = (root, query, cb) -> cb.equal(root.get("usuario"), usuario);
 
-        return metricas;
-    }
+                if (busca.isPresent()) { // Grupo B
+                        spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder
+                                        .like(criteriaBuilder.lower(root.get("nome")),
+                                                        "%" + busca.get().toLowerCase() + "%"));
+                }
 
-    @Transactional
-    public void deletarTransacao(Long id) {
-        this.transacaoRepository.findById(id).orElseThrow(() -> new RuntimeException("Transação não encontrada"));
-        this.transacaoRepository.deleteById(id);
-    }
+                if (tipo.isPresent()) {
+                        spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("tipo"),
+                                        tipo.get()));
+                }
 
-    public Transacao atualizarTransacao(Long id, TransacaoDTO transacaoDTO) {
+                if (dataCriacao.isPresent()) {
+                        LocalDateTime start = dataCriacao.get().atStartOfDay();
+                        LocalDateTime end = dataCriacao.get().plusDays(1).atStartOfDay();
+                        spec = spec.and(
+                                        (root, query, criteriaBuilder) -> criteriaBuilder
+                                                        .between(root.get("dataCriacao"), start, end));
+                }
 
-        Transacao transacao = this.transacaoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
-
-        transacao.setValor(transacaoDTO.valor());
-        transacao.setNome(transacaoDTO.nome());
-        transacao.setTipo(transacaoDTO.tipo());
-        transacao.setCategoria(transacaoDTO.categoria());
-
-        return this.transacaoRepository.save(transacao);
-    }
+                return transacaoRepository.findAll(spec, pageable);
+        }
 }
