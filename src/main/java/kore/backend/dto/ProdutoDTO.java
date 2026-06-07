@@ -1,6 +1,7 @@
 package kore.backend.dto;
 
 import jakarta.persistence.Column;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -14,6 +15,6 @@ public record ProdutoDTO(
         @NotNull
         Boolean possuiValidade,
         @NotNull
-        @Size(min = 0)
+        @Min(0)
         Integer qtdMinAlerta
 ) {}

@@ -10,9 +10,10 @@ public record MetricasDTO(
                 Double saldoAtual,
                 CategoriaTransacao principalGasto,
                 List<GastoPorCategoria> gastosPorCategoria,
-                MetricasMesPassado mesPassado
-
-) {
+                Double faturamentoBruto,
+                Double previsaoProximoMes,
+                Double variacaoPercentual,
+                MetricasMesPassado mesPassado) {
 
         public record MetricasMesPassado(
                         Double variacaoReceita,
@@ -34,6 +35,9 @@ public record MetricasDTO(
                                 ", saldoAtual=" + saldoAtual +
                                 ", principalGasto=" + principalGasto +
                                 ", gastosPorCategoria=" + gastosPorCategoria +
+                                ", faturamentoBruto=" + faturamentoBruto +
+                                ", previsaoProximoMes=" + previsaoProximoMes +
+                                ", variacaoPercentual=" + variacaoPercentual +
                                 '}';
         }
 

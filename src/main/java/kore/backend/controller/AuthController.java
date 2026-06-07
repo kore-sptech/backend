@@ -31,14 +31,14 @@ public class AuthController {
     @PostMapping("/login")
     @SecurityRequirements
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
-        var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.email(), loginDTO.senha());
-        var auth = this.authenticationManager.authenticate(usernamePassword);
-
-        // Usuario usuario = usuarioService.login(loginDTO.email(), loginDTO.senha());
-
-        var token = tokenService.generateToken((Usuario) auth.getPrincipal());
-
-        return ResponseEntity.ok(new LoginResponseDTO(token));
+        try {
+            var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.email(), loginDTO.senha());
+            var auth = this.authenticationManager.authenticate(usernamePassword);
+            var token = tokenService.generateToken((Usuario) auth.getPrincipal());
+            return ResponseEntity.ok(new LoginResponseDTO(token));
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            return ResponseEntity.status(401).body("Email ou senha inválidos");
+        }
     }
 
 }
