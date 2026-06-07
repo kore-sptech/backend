@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import kore.backend.model.Usuario;
+import kore.backend.model.enums.StatusAgendamento;
 import kore.backend.repository.FotoRepository;
 import kore.backend.repository.ItemRepository;
 
@@ -78,6 +79,7 @@ public class AgendamentoService {
                 .inicio(request.getInicio())
                 .fim(request.getFim())
                 .usuario(usuario)
+                .status(StatusAgendamento.PENDENTE)
                 .build();
 
         for (Foto foto : fotos)

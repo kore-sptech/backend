@@ -1,18 +1,23 @@
 package kore.backend.events;
 
-import kore.backend.model.Agendamento;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Evento contendo apenas o ID do agendamento. Transmitir entidades JPA entre
+ * threads/sessions é perigoso (coleções lazy não ficam inicializadas) —
+ * preferimos enviar o id e re-obter a entidade dentro de uma transação
+ * no listener.
+ */
 public class AgendamentoProximoEvent extends ApplicationEvent {
 
-    private final Agendamento agendamento;
+    private final Long agendamentoId;
 
-    public AgendamentoProximoEvent(Object source, Agendamento agendamento) {
+    public AgendamentoProximoEvent(Object source, Long agendamentoId) {
         super(source);
-        this.agendamento = agendamento;
+        this.agendamentoId = agendamentoId;
     }
 
-    public Agendamento getAgendamento() {
-        return agendamento;
+    public Long getAgendamentoId() {
+        return agendamentoId;
     }
 }

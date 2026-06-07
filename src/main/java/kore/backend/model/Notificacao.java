@@ -26,7 +26,7 @@ public class Notificacao {
 
     private boolean lida = false;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agendamento_fk")
     @JsonIgnore
     private Agendamento agendamento;

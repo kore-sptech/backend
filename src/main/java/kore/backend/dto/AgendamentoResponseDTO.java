@@ -7,6 +7,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Collections;
 
 @Getter
 public class AgendamentoResponseDTO {
@@ -34,10 +35,19 @@ public class AgendamentoResponseDTO {
         this.formaPagamento = agendamento.getFormaPagamento();
         this.inicio = agendamento.getInicio();
         this.fim = agendamento.getFim();
-        this.referencias = agendamento.getReferencias().stream().map(
-                f -> {
-                    f.setImageUrl(f.getImageUrl().substring(1, f.getImageUrl().length()));
-                    return f;
-                }).toList();
+        List<Foto> refs = agendamento.getReferencias();
+        if (refs == null) {
+            this.referencias = Collections.emptyList();
+        } else {
+            this.referencias = refs.stream().peek(
+                    f -> {
+                        String url = f.getImageUrl();
+                        if (url != null && url.length() > 0) {
+                            // remove leading slash apenas se existir
+                            f.setImageUrl(url.substring(1));
+                        }
+                    }
+            ).toList();
+        }
     }
 }

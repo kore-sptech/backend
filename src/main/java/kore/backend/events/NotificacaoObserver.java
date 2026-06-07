@@ -15,23 +15,25 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class NotificacaoObserver {
 
     private final NotificacaoRepository notificacaoRepository;
-
     private final ServerSentEventService serverSentEventService;
-
     private final AgendamentoRepository agendamentoRepository;
 
     @EventListener
     @Transactional
     public void onAgendamentoProximo(AgendamentoProximoEvent event) {
-        Agendamento agendamento = event.getAgendamento();
+        Long agendamentoId = event.getAgendamentoId();
 
-        // Guarda de duplicata: se já existe notificação para este agendamento, ignora
+        // Recarrega a entidade com referências inicializadas dentro da transação
+        Agendamento agendamento = agendamentoRepository.findByIdWithReferencias(agendamentoId)
+                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado: " + agendamentoId));
+
         if (notificacaoRepository.existsByAgendamento(agendamento)) {
             log.info("Notificação já existente para agendamento ID: {}. Ignorando.", agendamento.getId());
             return;
@@ -54,12 +56,9 @@ public class NotificacaoObserver {
 
         notificacaoRepository.save(notificacao);
 
-        serverSentEventService.sendNotification(
-                notificacao.getMensagem()
-        );
+        serverSentEventService.sendNotification(notificacao, agendamento);
 
-        agendamento.setStatusAgendamento(StatusAgendamento.AGUARDANDO);
-
+        agendamento.setStatus(StatusAgendamento.AGUARDANDO);
         agendamentoRepository.save(agendamento);
 
         log.info("Notificação salva para agendamento ID: {}", agendamento.getId());

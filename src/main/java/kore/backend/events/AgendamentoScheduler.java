@@ -18,7 +18,7 @@ public class AgendamentoScheduler {
     private final AgendamentoRepository agendamentoRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Scheduled(fixedDelay = 60_000) // a cada 1 minuto é suficiente para janela de ±1 min
+    @Scheduled(fixedDelay = 10_000) // a cada 1 minuto é suficiente para janela de ±1 min
     public void verificarAgendamentosProximos() {
         LocalDateTime agora = LocalDateTime.now();
 
@@ -29,9 +29,10 @@ public class AgendamentoScheduler {
 
         log.info("Scheduler rodando. Buscando agendamentos entre {} e {}", janelaInicio, janelaFim);
         agendamentoRepository
-                .findByInicioBetweenAndStatusAgendamento(janelaInicio, janelaFim, StatusAgendamento.PENDENTE)
+                .findByInicioBetweenAndStatus(janelaInicio, janelaFim, StatusAgendamento.PENDENTE)
                 .forEach(agendamento -> {
-                    eventPublisher.publishEvent(new AgendamentoProximoEvent(this, agendamento));
+                    // publique apenas o id para evitar passar a entidade JPA (detached)
+                    eventPublisher.publishEvent(new AgendamentoProximoEvent(this, agendamento.getId()));
                     log.info("Evento publicado para agendamento ID: {}", agendamento.getId());
                 });
     }

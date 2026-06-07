@@ -51,7 +51,8 @@ public class Agendamento {
     private LocalDateTime fim;
 
     @Enumerated(EnumType.STRING)
-    private StatusAgendamento statusAgendamento = StatusAgendamento.PENDENTE;
+    @Column(name = "status")
+    private StatusAgendamento status = StatusAgendamento.PENDENTE;
 
     public void put(AgendamentoRequestDTO agendamento) {
         this.preco = agendamento.getPreco();
