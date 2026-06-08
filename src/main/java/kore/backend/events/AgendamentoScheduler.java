@@ -2,6 +2,7 @@ package kore.backend.events;
 
 import kore.backend.model.enums.StatusAgendamento;
 import kore.backend.repository.AgendamentoRepository;
+import kore.backend.service.ServerSentEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -15,6 +16,8 @@ import java.time.LocalDateTime;
 @Slf4j
 public class AgendamentoScheduler {
 
+    private final ServerSentEventService sseService;
+
     private final AgendamentoRepository agendamentoRepository;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -24,7 +27,7 @@ public class AgendamentoScheduler {
 
         // Janela de ±1 minuto em torno dos 10 minutos — evita tanto perder quanto
         // duplicar
-        LocalDateTime janelaInicio = agora.plusMinutes(9);
+        LocalDateTime janelaInicio = agora.plusMinutes(0);
         LocalDateTime janelaFim = agora.plusMinutes(11);
 
         log.info("Scheduler rodando. Buscando agendamentos entre {} e {}", janelaInicio, janelaFim);
@@ -35,5 +38,10 @@ public class AgendamentoScheduler {
                     eventPublisher.publishEvent(new AgendamentoProximoEvent(this, agendamento.getId()));
                     log.info("Evento publicado para agendamento ID: {}", agendamento.getId());
                 });
+    }
+
+    @Scheduled(fixedDelay = 25_000)
+    public void heartbeat() {
+        sseService.sendHeartbeat();
     }
 }

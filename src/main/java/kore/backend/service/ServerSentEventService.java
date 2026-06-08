@@ -1,6 +1,5 @@
 package kore.backend.service;
 
-import jakarta.annotation.PostConstruct;
 import kore.backend.dto.AgendamentoResponseDTO;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Notificacao;
@@ -12,9 +11,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -22,55 +20,114 @@ public class ServerSentEventService {
 
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    @PostConstruct
-    public void startHeartbeat() {
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-                () -> sendNotification(Notificacao.builder().build(), Agendamento.builder().build()),
-                30, 30, TimeUnit.SECONDS
-        );
-    }
+    // ── Conexão ───────────────────────────────────────────────────────────────
 
     public SseEmitter connect() {
         SseEmitter emitter = new SseEmitter(180_000L);
-
-        this.emitters.add(emitter);
+        emitters.add(emitter);
 
         emitter.onCompletion(() -> {
             log.info("Emitter completado. Removendo da lista.");
-            this.emitters.remove(emitter);
+            emitters.remove(emitter);
         });
 
         emitter.onTimeout(() -> {
-            log.info("Emitter expirado. Sinalizando cliente e removendo.");
+            log.info("Emitter expirado. Removendo.");
             emitter.complete();
-            this.emitters.remove(emitter);
+            emitters.remove(emitter);
         });
 
-        emitter.onError((ex) -> {
+        emitter.onError(ex -> {
             log.warn("Erro no emitter: {}. Removendo.", ex.getMessage());
-            this.emitters.remove(emitter);
+            emitters.remove(emitter);
         });
 
-        log.info("Cliente conectado. Total de clientes: {}", emitters.size());
+        // Envia um evento inicial para confirmar a conexão ao cliente
+        try {
+            emitter.send(SseEmitter.event().comment("connected"));
+        } catch (IOException e) {
+            log.warn("Falha ao enviar confirmação de conexão: {}", e.getMessage());
+            emitters.remove(emitter);
+        }
+
+        log.info("Cliente conectado. Total de clientes ativos: {}", emitters.size());
         return emitter;
     }
 
-    public void sendNotification(Notificacao notificacao, Agendamento agendamento) {
-        List<SseEmitter> deadEmitters = new ArrayList<>();
+    // ── Envio de notificação ──────────────────────────────────────────────────
 
-        HashMap<Object, Object> message = new HashMap<>();
+    public void sendNotification(Notificacao notificacao, Agendamento agendamento) {
+        if (emitters.isEmpty()) {
+            log.info("Nenhum cliente SSE conectado. Notificação não enviada.");
+            return;
+        }
+
+        Map<String, Object> message = new HashMap<>();
         message.put("notificacao", notificacao);
         message.put("agendamento", new AgendamentoResponseDTO(agendamento));
+
+        List<SseEmitter> deadEmitters = new ArrayList<>();
 
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event().data(message));
+
+            } catch (IllegalStateException e) {
+                // Spring encapsula "Broken pipe" / "Túnel quebrado" aqui
+                // O emitter já está morto — remove silenciosamente
+                log.warn("Emitter inativo (IllegalStateException): {}. Removendo.", e.getMessage());
+                deadEmitters.add(emitter);
+
             } catch (IOException e) {
-                log.warn("Falha ao enviar para emitter. Marcando para remoção.");
+                // Falha de I/O direta (conexão fechada, reset, etc.)
+                log.warn("Falha de I/O no emitter: {}. Removendo.", e.getMessage());
+                deadEmitters.add(emitter);
+
+            } catch (Exception e) {
+                // Qualquer outra falha inesperada — loga com stack trace completo
+                log.error("Erro inesperado ao enviar SSE para emitter. Removendo.", e);
                 deadEmitters.add(emitter);
             }
         }
 
-        emitters.removeAll(deadEmitters);
+        if (!deadEmitters.isEmpty()) {
+            emitters.removeAll(deadEmitters);
+            log.info("{} emitter(s) removido(s). Total ativo: {}", deadEmitters.size(), emitters.size());
+        }
+    }
+
+    // ── Heartbeat (opcional mas recomendado) ──────────────────────────────────
+
+    /**
+     * Chame este método via @Scheduled a cada 25-30s para manter conexões vivas
+     * e detectar clientes desconectados antes de uma notificação real falhar.
+     * <p>
+     * Exemplo no seu scheduler:
+     *
+     * @Scheduled(fixedDelay = 25_000)
+     * public void heartbeat() {
+     * sseService.sendHeartbeat();
+     * }
+     */
+    public void sendHeartbeat() {
+        if (emitters.isEmpty()) return;
+
+        List<SseEmitter> deadEmitters = new ArrayList<>();
+
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.send(SseEmitter.event().comment("heartbeat"));
+            } catch (IllegalStateException | IOException e) {
+                log.debug("Heartbeat falhou (cliente desconectado). Removendo emitter.");
+                deadEmitters.add(emitter);
+            } catch (Exception e) {
+                log.warn("Erro inesperado no heartbeat. Removendo emitter.", e);
+                deadEmitters.add(emitter);
+            }
+        }
+
+        if (!deadEmitters.isEmpty()) {
+            emitters.removeAll(deadEmitters);
+        }
     }
 }

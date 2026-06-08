@@ -26,25 +26,50 @@ public class NotificacaoObserver {
     private final AgendamentoRepository agendamentoRepository;
 
     @EventListener
-    @Transactional
     public void onAgendamentoProximo(AgendamentoProximoEvent event) {
-        Long agendamentoId = event.getAgendamentoId();
 
-        // Recarrega a entidade com referências inicializadas dentro da transação
-        Agendamento agendamento = agendamentoRepository.findByIdWithReferencias(agendamentoId)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado: " + agendamentoId));
+        // 1. Persiste a notificação dentro de uma transação isolada
+        NotificacaoComAgendamento resultado = salvarNotificacao(event.getAgendamentoId());
+
+        // Retorno nulo = notificação já existia; nada a fazer
+        if (resultado == null) return;
+
+        // 2. Envia via SSE FORA da transação
+        //    Erros de rede (Broken pipe) não afetam mais o commit do banco
+        serverSentEventService.sendNotification(
+                resultado.notificacao(),
+                resultado.agendamento()
+        );
+    }
+
+    // ── Transação isolada ─────────────────────────────────────────────────────
+
+    /**
+     * Toda a lógica de banco em uma única transação.
+     * O envio SSE fica propositalmente fora daqui.
+     *
+     * @return NotificacaoComAgendamento ou null se já notificado
+     */
+    @Transactional
+    protected NotificacaoComAgendamento salvarNotificacao(Long agendamentoId) {
+
+        Agendamento agendamento = agendamentoRepository
+                .findByIdWithReferencias(agendamentoId)
+                .orElseThrow(() -> new RuntimeException(
+                        "Agendamento não encontrado: " + agendamentoId));
 
         if (notificacaoRepository.existsByAgendamento(agendamento)) {
-            log.info("Notificação já existente para agendamento ID: {}. Ignorando.", agendamento.getId());
-            return;
+            log.info("Notificação já existente para agendamento ID: {}. Ignorando.", agendamentoId);
+            return null;
         }
 
-        long diferencaEmMinutos = LocalDateTime.now().until(agendamento.getInicio(), ChronoUnit.MINUTES);
+        long minutosRestantes = LocalDateTime.now()
+                .until(agendamento.getInicio(), ChronoUnit.MINUTES);
 
         String mensagem = String.format(
                 "Agendamento de %s começa em %d minutos.",
                 agendamento.getCliente(),
-                diferencaEmMinutos
+                minutosRestantes
         );
 
         Notificacao notificacao = Notificacao.builder()
@@ -56,11 +81,16 @@ public class NotificacaoObserver {
 
         notificacaoRepository.save(notificacao);
 
-        serverSentEventService.sendNotification(notificacao, agendamento);
-
         agendamento.setStatus(StatusAgendamento.AGUARDANDO);
         agendamentoRepository.save(agendamento);
 
         log.info("Notificação salva para agendamento ID: {}", agendamento.getId());
+
+        return new NotificacaoComAgendamento(notificacao, agendamento);
+    }
+
+    // ── Record auxiliar ───────────────────────────────────────────────────────
+
+    private record NotificacaoComAgendamento(Notificacao notificacao, Agendamento agendamento) {
     }
 }

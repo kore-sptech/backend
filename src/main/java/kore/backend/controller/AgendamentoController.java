@@ -8,15 +8,7 @@ import kore.backend.model.Usuario;
 import kore.backend.service.AgendamentoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -24,6 +16,7 @@ import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/agendamentos")
@@ -60,5 +53,22 @@ public class AgendamentoController {
     public ResponseEntity<Agendamento> criar(@Valid @RequestBody AgendamentoRequestDTO agendamento,
             @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(agendamentoService.criar(agendamento, usuario));
+    }
+
+    @PatchMapping("/confirmar/{agendamentoId}")
+    public ResponseEntity<Void> confirmar(
+            @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario
+            ){
+        this.agendamentoService.confirmar(agendamentoId, usuario);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @PatchMapping("/cancelar/{agendamentoId}")
+    public ResponseEntity<Void> cancelar(
+            @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario
+    ){
+        this.agendamentoService.cancelar(agendamentoId, usuario);
+        return ResponseEntity.noContent().build();
     }
 }
