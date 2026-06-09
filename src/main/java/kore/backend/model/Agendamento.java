@@ -1,5 +1,6 @@
 package kore.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.model.enums.FormaPagamento;
@@ -53,6 +54,10 @@ public class Agendamento {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private StatusAgendamento status = StatusAgendamento.PENDENTE;
+
+    @OneToOne(mappedBy = "sessao", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Transacao transacao;
 
     public void put(AgendamentoRequestDTO agendamento) {
         this.preco = agendamento.getPreco();

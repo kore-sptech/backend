@@ -3,20 +3,11 @@ package kore.backend.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import kore.backend.dto.TransacaoDTO;
 import kore.backend.model.enums.CategoriaTransacao;
 import kore.backend.model.enums.TipoTransacao;
@@ -52,8 +43,12 @@ public class Transacao {
     @ManyToOne
     @JoinColumn(name = "idUsuario")
     @JsonIgnore
-
     private Usuario usuario;
+
+
+    @OneToOne
+    @JoinColumn(name = "sessao_id")
+    private Agendamento sessao;
 
     public Transacao(TransacaoDTO transacaoDTO) {
         this.valor = transacaoDTO.valor();

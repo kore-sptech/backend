@@ -10,11 +10,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import kore.backend.model.Transacao;
 import kore.backend.model.Usuario;
 import kore.backend.model.enums.StatusAgendamento;
 import kore.backend.repository.FotoRepository;
 import kore.backend.repository.ItemRepository;
 
+import kore.backend.repository.TransacaoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,11 +34,14 @@ public class AgendamentoService {
     private final FotoRepository fotoRepository;
     private final AgendamentoRepository agendamentoRepository;
     private final ItemRepository itemRepository;
+    private final TransacaoRepository transacaoRepository;
 
-    public AgendamentoService(AgendamentoRepository agendamentoRepository, FotoRepository fotoRepository, ItemRepository itemRepository) {
+    public AgendamentoService(AgendamentoRepository agendamentoRepository, FotoRepository fotoRepository,
+                              ItemRepository itemRepository, TransacaoRepository transacaoRepository) {
         this.agendamentoRepository = agendamentoRepository;
         this.fotoRepository = fotoRepository;
         this.itemRepository = itemRepository;
+        this.transacaoRepository = transacaoRepository;
     }
 
     @Transactional
@@ -62,7 +67,8 @@ public class AgendamentoService {
             throw new IllegalArgumentException("Fim do agendamento deve ser após o início");
         }
 
-        boolean existeConflitoNaAgenda = this.agendamentoRepository.existsByInicioLessThanAndFimGreaterThanAndUsuario(request.getFim(), request.getInicio(), usuario);
+        boolean existeConflitoNaAgenda = this.agendamentoRepository
+                .existsByInicioLessThanAndFimGreaterThanAndUsuario(request.getFim(), request.getInicio(), usuario);
 
         if (existeConflitoNaAgenda) {
             throw new IllegalArgumentException("Já existe um agendamento nesse horário");
@@ -70,7 +76,9 @@ public class AgendamentoService {
 
         Agendamento agendamento = Agendamento.builder().referencias(fotos)
                 // .items(items)
-                .cliente(request.getCliente()).telefone(request.getTelefone()).formaPagamento(request.getFormaPagamento()).preco(request.getPreco()).inicio(request.getInicio()).fim(request.getFim()).usuario(usuario).status(StatusAgendamento.PENDENTE).build();
+                .cliente(request.getCliente()).telefone(request.getTelefone())
+                .formaPagamento(request.getFormaPagamento()).preco(request.getPreco()).inicio(request.getInicio())
+                .fim(request.getFim()).usuario(usuario).status(StatusAgendamento.PENDENTE).build();
 
         for (Foto foto : fotos)
             foto.setAgendamento(agendamento);
@@ -86,7 +94,8 @@ public class AgendamentoService {
 
     @Transactional
     public void deletar(Long id) {
-        Agendamento agendamento = this.agendamentoRepository.findById(id).orElseThrow(AgendamentoNaoEncondradoException::new);
+        Agendamento agendamento = this.agendamentoRepository.findById(id)
+                .orElseThrow(AgendamentoNaoEncondradoException::new);
 
         this.itemRepository.deleteAllByAgendamento(agendamento);
 
@@ -103,7 +112,8 @@ public class AgendamentoService {
 
     public List<AgendamentoResponseDTO> listarEntreDatas(LocalDateTime inicio, LocalDateTime fim, Usuario usuario) {
 
-        return this.agendamentoRepository.findByInicioBetweenAndUsuario(inicio, fim, usuario).stream().map(AgendamentoResponseDTO::new).collect(Collectors.toList());
+        return this.agendamentoRepository.findByInicioBetweenAndUsuario(inicio, fim, usuario).stream()
+                .map(AgendamentoResponseDTO::new).collect(Collectors.toList());
     }
 
     @Transactional
@@ -111,17 +121,20 @@ public class AgendamentoService {
 
         System.out.println("Referencias recebidas: " + agendamento.getReferencias());
 
-        Agendamento agendamentoEncontrado = this.agendamentoRepository.findById(id).orElseThrow(AgendamentoNaoEncondradoException::new);
+        Agendamento agendamentoEncontrado = this.agendamentoRepository.findById(id)
+                .orElseThrow(AgendamentoNaoEncondradoException::new);
 
         // Validar conflitos de data se as datas foram alteradas
-        if (!agendamento.getInicio().equals(agendamentoEncontrado.getInicio()) || !agendamento.getFim().equals(agendamentoEncontrado.getFim())) {
+        if (!agendamento.getInicio().equals(agendamentoEncontrado.getInicio())
+                || !agendamento.getFim().equals(agendamentoEncontrado.getFim())) {
 
             if (!agendamento.getFim().isAfter(agendamento.getInicio())) {
                 throw new IllegalArgumentException("Fim do agendamento deve ser após o início");
             }
 
             // Verificar conflito apenas com outros agendamentos (ID diferente)
-            List<Agendamento> agendamentosEmConflito = this.agendamentoRepository.findByInicioBetweenAndUsuario(agendamento.getInicio(), agendamento.getFim(), usuario);
+            List<Agendamento> agendamentosEmConflito = this.agendamentoRepository
+                    .findByInicioBetweenAndUsuario(agendamento.getInicio(), agendamento.getFim(), usuario);
 
             boolean existeConflitoComOutro = agendamentosEmConflito.stream().anyMatch(a -> !a.getId().equals(id));
 
@@ -135,6 +148,12 @@ public class AgendamentoService {
 
         if (fotosNovas.isEmpty()) {
             throw new IllegalArgumentException("Nenhuma foto encontrada para os IDs fornecidos");
+        }
+
+        if (!agendamento.getPreco().equals(agendamentoEncontrado.getPreco())) {
+            agendamentoEncontrado.getTransacao().setValor(agendamento.getPreco());
+
+            this.transacaoRepository.save(agendamentoEncontrado.getTransacao());
         }
 
         // Atualizar dados do agendamento
@@ -159,6 +178,7 @@ public class AgendamentoService {
         // Atualizar lista de referências
         agendamentoEncontrado.setReferencias(fotosNovas);
 
+
         // Salvar fotos e agendamento
         this.fotoRepository.saveAll(fotosNovas);
         return agendamentoRepository.save(agendamentoEncontrado);
@@ -167,10 +187,19 @@ public class AgendamentoService {
 
     @Transactional
     public void confirmar(Long agendamentoId, Usuario usuario) {
-        Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId).orElseThrow(AgendamentoNaoEncondradoException::new);
+        Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
+                .orElseThrow(AgendamentoNaoEncondradoException::new);
+
+        if (agendamento.getStatus().equals(StatusAgendamento.CONFIRMADO)) {
+            throw new IllegalArgumentException("Este agendamento já está confirmado");
+        }
 
         if (!agendamento.getUsuario().getId().equals(usuario.getId())) {
             throw new IllegalArgumentException("Usuário não autorizado para confirmar este agendamento");
+        }
+
+        if (agendamento.getStatus().equals(StatusAgendamento.CANCELADO)) {
+            throw new IllegalArgumentException("Não é possível confirmar o pagamento de um agendamento cancelado");
         }
 
         agendamento.setStatus(StatusAgendamento.CONFIRMADO);
@@ -179,11 +208,37 @@ public class AgendamentoService {
     }
 
     @Transactional
-    public void cancelar(Long agendamentoId, Usuario usuario) {
-        Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId).orElseThrow(AgendamentoNaoEncondradoException::new);
+    public void confirmarPagamento(Long agendamentoId, Usuario usuario) {
+        Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
+                .orElseThrow(AgendamentoNaoEncondradoException::new);
+
+        if (agendamento.getStatus().equals(StatusAgendamento.CONFIRMADO_PAGAMENTO)) {
+            throw new IllegalArgumentException("Este agendamento já está confirmado");
+        }
 
         if (!agendamento.getUsuario().getId().equals(usuario.getId())) {
-            throw new IllegalArgumentException("Usuário não autorizado para confirmar este agendamento");
+            throw new IllegalArgumentException("Usuário não autorizado para confirmar o pagamento deste agendamento");
+        }
+
+        if (agendamento.getStatus().equals(StatusAgendamento.CANCELADO)) {
+            throw new IllegalArgumentException("Não é possível confirmar o pagamento de um agendamento cancelado");
+        }
+
+        agendamento.setStatus(StatusAgendamento.CONFIRMADO_PAGAMENTO);
+        this.agendamentoRepository.save(agendamento);
+    }
+
+    @Transactional
+    public void cancelar(Long agendamentoId, Usuario usuario) {
+        Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
+                .orElseThrow(AgendamentoNaoEncondradoException::new);
+
+        if (!agendamento.getUsuario().getId().equals(usuario.getId())) {
+            throw new IllegalArgumentException("Usuário não autorizado para cancelar este agendamento");
+        }
+
+        if (agendamento.getStatus().equals(StatusAgendamento.CANCELADO)) {
+            throw new IllegalArgumentException("Este agendamento já está cancelado");
         }
 
         agendamento.setStatus(StatusAgendamento.CANCELADO);

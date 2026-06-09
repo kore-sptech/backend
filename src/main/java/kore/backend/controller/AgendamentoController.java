@@ -57,17 +57,21 @@ public class AgendamentoController {
 
     @PatchMapping("/confirmar/{agendamentoId}")
     public ResponseEntity<Void> confirmar(
-            @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario
-            ){
+            @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario) {
         this.agendamentoService.confirmar(agendamentoId, usuario);
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/confirmar_pagamento/{agendamentoId}")
+    public ResponseEntity<Void> confirmarPagamento(
+            @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario) {
+        this.agendamentoService.confirmarPagamento(agendamentoId, usuario);
+        return ResponseEntity.noContent().build();
+    }
 
     @PatchMapping("/cancelar/{agendamentoId}")
     public ResponseEntity<Void> cancelar(
-            @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario
-    ){
+            @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario) {
         this.agendamentoService.cancelar(agendamentoId, usuario);
         return ResponseEntity.noContent().build();
     }

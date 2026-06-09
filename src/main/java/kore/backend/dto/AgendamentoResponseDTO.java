@@ -3,6 +3,7 @@ package kore.backend.dto;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Foto;
 import kore.backend.model.enums.FormaPagamento;
+import kore.backend.model.enums.StatusAgendamento;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -27,6 +28,8 @@ public class AgendamentoResponseDTO {
 
     private List<Foto> referencias;
 
+    private StatusAgendamento status;
+
     public AgendamentoResponseDTO(Agendamento agendamento) {
         this.id = agendamento.getId();
         this.preco = agendamento.getPreco();
@@ -35,6 +38,7 @@ public class AgendamentoResponseDTO {
         this.formaPagamento = agendamento.getFormaPagamento();
         this.inicio = agendamento.getInicio();
         this.fim = agendamento.getFim();
+        this.status = agendamento.getStatus();
         List<Foto> refs = agendamento.getReferencias();
         if (refs == null) {
             this.referencias = Collections.emptyList();
@@ -46,8 +50,7 @@ public class AgendamentoResponseDTO {
                             // remove leading slash apenas se existir
                             f.setImageUrl(url.substring(1));
                         }
-                    }
-            ).toList();
+                    }).toList();
         }
     }
 }
