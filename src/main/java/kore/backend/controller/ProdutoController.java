@@ -36,6 +36,7 @@ public class ProdutoController {
         Produto p = produtoService.salvarProduto(produtoDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(p);
     }
+
     @Operation(summary = "Listagem de produtos", description = "Lista todos os produto")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Produtos listados com sucesso"),
@@ -44,14 +45,14 @@ public class ProdutoController {
     })
     @GetMapping
     public ResponseEntity<List<Produto>> listrarProdutos() {
-        try{
+        try {
             List<Produto> p = produtoService.listarTodosProdutos();
             if (p.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
             return ResponseEntity.ok().body(p);
-        }catch (Exception e){
-            if (e instanceof DataAccessException){
+        } catch (Exception e) {
+            if (e instanceof DataAccessException) {
                 // adicionar logs depois
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
             }
@@ -59,6 +60,7 @@ public class ProdutoController {
         }
 
     }
+
     @Operation(summary = "Atualização de produto", description = "Atualiza o produto")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso"),
@@ -69,15 +71,16 @@ public class ProdutoController {
     public ResponseEntity<Produto> atualizarProduto(
             @PathVariable Long id,
             @Valid @RequestBody ProdutoDTO produtoDTO) {
-        try{
+        try {
             Produto p = produtoService.atualizarProduto(id, produtoDTO);
             return ResponseEntity.ok(p);
-        }catch (Exception e){
+        } catch (Exception e) {
             if (e instanceof DataAccessException)
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
     @Operation(summary = "Remoção de produto", description = "Remove o produto")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Produto removido com sucesso"),
@@ -85,7 +88,7 @@ public class ProdutoController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarProduto(@PathVariable Long id) {
-        try{
+        try {
             produtoService.deletarProduto(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {

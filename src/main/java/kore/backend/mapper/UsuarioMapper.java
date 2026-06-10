@@ -8,7 +8,7 @@ import java.util.List;
 
 public class UsuarioMapper {
 
-    public static UsuarioResponseDTO toResponse(Usuario u){
+    public static UsuarioResponseDTO toResponse(Usuario u) {
         return new UsuarioResponseDTO(u.getId(), u.getNome(), u.getEmail());
     }
 
