@@ -37,7 +37,7 @@ public class AgendamentoService {
     private final TransacaoRepository transacaoRepository;
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FotoRepository fotoRepository,
-                              ItemRepository itemRepository, TransacaoRepository transacaoRepository) {
+            ItemRepository itemRepository, TransacaoRepository transacaoRepository) {
         this.agendamentoRepository = agendamentoRepository;
         this.fotoRepository = fotoRepository;
         this.itemRepository = itemRepository;
@@ -178,7 +178,6 @@ public class AgendamentoService {
         // Atualizar lista de referências
         agendamentoEncontrado.setReferencias(fotosNovas);
 
-
         // Salvar fotos e agendamento
         this.fotoRepository.saveAll(fotosNovas);
         return agendamentoRepository.save(agendamentoEncontrado);
@@ -216,10 +215,6 @@ public class AgendamentoService {
             throw new IllegalArgumentException("Este agendamento já está confirmado");
         }
 
-        if (!agendamento.getUsuario().getId().equals(usuario.getId())) {
-            throw new IllegalArgumentException("Usuário não autorizado para confirmar o pagamento deste agendamento");
-        }
-
         if (agendamento.getStatus().equals(StatusAgendamento.CANCELADO)) {
             throw new IllegalArgumentException("Não é possível confirmar o pagamento de um agendamento cancelado");
         }
@@ -232,10 +227,6 @@ public class AgendamentoService {
     public void cancelar(Long agendamentoId, Usuario usuario) {
         Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
                 .orElseThrow(AgendamentoNaoEncondradoException::new);
-
-        if (!agendamento.getUsuario().getId().equals(usuario.getId())) {
-            throw new IllegalArgumentException("Usuário não autorizado para cancelar este agendamento");
-        }
 
         if (agendamento.getStatus().equals(StatusAgendamento.CANCELADO)) {
             throw new IllegalArgumentException("Este agendamento já está cancelado");
