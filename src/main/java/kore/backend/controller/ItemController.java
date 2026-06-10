@@ -2,7 +2,9 @@ package kore.backend.controller;
 
 import kore.backend.dto.ItemDTO;
 import kore.backend.model.Item;
+import kore.backend.model.Produto;
 import kore.backend.service.ItemService;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,5 +42,19 @@ public class ItemController {
             ){
         List<Item> e =  itemService.adicionarEstoque(itemDTO, qtd, id);
         return ResponseEntity.status(HttpStatus.CREATED).body(e);
+    }
+    @PutMapping("/{id}/{idAgendamento}")
+    public ResponseEntity<Item> atualizarEstoqueComAgendamento (
+            @PathVariable Long id,
+            @PathVariable Long idAgendamento
+    ){
+        try{
+            Item i = itemService.atualizarEstoqueComAgendamento(id, idAgendamento);
+            return ResponseEntity.ok(i);
+        }catch (Exception e){
+            if (e instanceof DataAccessException)
+                return ResponseEntity.                                                                                                      status(HttpStatus.SERVICE_UNAVAILABLE).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

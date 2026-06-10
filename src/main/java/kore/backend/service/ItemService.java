@@ -3,8 +3,10 @@ package kore.backend.service;
 import jakarta.transaction.Transactional;
 import kore.backend.dto.ItemDTO;
 import kore.backend.exception.RecursoNaoEncontradoException;
+import kore.backend.model.Agendamento;
 import kore.backend.model.Item;
 import kore.backend.model.Produto;
+import kore.backend.repository.AgendamentoRepository;
 import kore.backend.repository.ItemRepository;
 import kore.backend.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
@@ -17,10 +19,17 @@ import java.util.List;
 public class ItemService {
     private final ItemRepository itemRepository;
     private final ProdutoRepository produtoRepository;
+    private final AgendamentoRepository agendamentoRepository;
 
-    public ItemService(ItemRepository itemRepository, ProdutoRepository produtoRepository) {
+    public ItemService(
+            ItemRepository itemRepository,
+            ProdutoRepository produtoRepository,
+            AgendamentoRepository agendamentoRepository
+    ) {
         this.itemRepository = itemRepository;
         this.produtoRepository = produtoRepository;
+        this.agendamentoRepository = agendamentoRepository;
+
     }
 
     @Transactional
@@ -47,10 +56,19 @@ public class ItemService {
 
     @Transactional
     public void removerEstoque(Long id) {
-        if (!itemRepository.existsById(id)) {
-            throw new RecursoNaoEncontradoException("Item não encontrado", id);
-        }
-        itemRepository.deleteById(id);
+        Item i = itemRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto nao encontrado", id));
+        i.setSeAtivo(false);
     }
 
+    @Transactional
+    public Item atualizarEstoqueComAgendamento(Long idEstoque, Long idAgendamento){
+        Item i = itemRepository.findById(idEstoque)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto nao encontrado", idEstoque)) ;
+        Agendamento a = agendamentoRepository.findById(idAgendamento)
+                        .orElseThrow(() -> new RecursoNaoEncontradoException("Agendamento nao encontrado", idAgendamento));
+        i.setAgendamento(a);
+        i.setSeAtivo(false);
+        return itemRepository.save(i);
+    }
 }
