@@ -31,10 +31,8 @@ public class AgendamentoRequestDTO {
 
     private FormaPagamento formaPagamento;
 
-    @Future(message = "A data de início deve ser uma data futura")
     private LocalDateTime inicio;
 
-    @Future(message = "A data de fim deve ser uma data futura")
     private LocalDateTime fim;
 
     @NotEmpty(message = "As referências do agendamento são obrigatórias")

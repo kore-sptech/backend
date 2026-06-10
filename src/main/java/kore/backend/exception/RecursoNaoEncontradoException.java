@@ -6,8 +6,10 @@ public class RecursoNaoEncontradoException extends RuntimeException {
     private final Object valor;
 
     public RecursoNaoEncontradoException(String recurso, Long id) {
+        super(recurso);
         this.recurso = recurso;
         this.campo = "id";
         this.valor = id;
+
     }
 }

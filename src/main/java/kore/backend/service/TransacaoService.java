@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import kore.backend.exception.AgendamentoNaoEncondradoException;
+import kore.backend.model.Agendamento;
 import kore.backend.repository.AgendamentoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +21,7 @@ import kore.backend.dto.TransacaoDTO;
 import kore.backend.model.Transacao;
 import kore.backend.model.Usuario;
 import kore.backend.model.enums.CategoriaTransacao;
+import kore.backend.model.enums.StatusAgendamento;
 import kore.backend.model.enums.TipoTransacao;
 import kore.backend.repository.TransacaoRepository;
 
@@ -27,10 +30,13 @@ public class TransacaoService {
 
         private final TransacaoRepository transacaoRepository;
         private final AgendamentoRepository agendamentoRepository;
+        private final AgendamentoService agendamentoService;
 
-        public TransacaoService(TransacaoRepository transacaoRepository, AgendamentoRepository agendamentoRepository) {
+        public TransacaoService(TransacaoRepository transacaoRepository, AgendamentoRepository agendamentoRepository,
+                        AgendamentoService agendamentoService) {
                 this.transacaoRepository = transacaoRepository;
                 this.agendamentoRepository = agendamentoRepository;
+                this.agendamentoService = agendamentoService;
         }
 
         @Transactional
@@ -42,6 +48,23 @@ public class TransacaoService {
                 }
 
                 transacao.setUsuario(usuario);
+                return transacaoRepository.save(transacao);
+        }
+
+        @Transactional
+        public Transacao criarTransacao(TransacaoDTO transacaoDTO, Usuario usuario, Long agendamentoId) {
+                Transacao transacao = new Transacao(transacaoDTO);
+
+                Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
+                                .orElseThrow(AgendamentoNaoEncondradoException::new);
+
+                if (transacao.getValor() <= 0) {
+                        throw new RuntimeException("Valor da transação deve ser maior que zero");
+                }
+
+                transacao.setUsuario(usuario);
+                transacao.setSessao(agendamento);
+
                 return transacaoRepository.save(transacao);
         }
 
@@ -88,7 +111,19 @@ public class TransacaoService {
 
                 // ── faturamentoBruto = total de entradas do mês atual ────────────────────
                 // Semântica: receita bruta realizada no período
-                Double faturamentoBruto = totalEntradas; 
+                List<Agendamento> agendamentos = this.agendamentoRepository
+                                .findByInicioBetweenAndUsuario(inicioMesAtual, inicioProximoMes, usuario);
+
+                System.out.println(agendamentos);
+
+                Double faturamentoDeAgendamentos = agendamentos.stream()
+                                .filter(a -> !a.getStatus().equals(StatusAgendamento.CANCELADO))
+                                .mapToDouble(a -> a.getPreco() != null ? a.getPreco() : 0.0)
+                                .sum();
+
+                System.out.println(faturamentoDeAgendamentos);
+
+                Double faturamentoBruto = faturamentoDeAgendamentos;
 
                 // ── Previsão do próximo mês via agendamentos ─────────────────────────────
                 LocalDateTime fimProximoMes = inicioProximoMes.plusMonths(1);
@@ -151,6 +186,11 @@ public class TransacaoService {
                 transacao.setNome(transacaoDTO.nome());
                 transacao.setTipo(transacaoDTO.tipo());
                 transacao.setCategoria(transacaoDTO.categoria());
+
+                if (transacao.getSessao() != null) {
+                        transacao.getSessao().setPreco(transacao.getValor());
+                        this.agendamentoRepository.save(transacao.getSessao());
+                }
 
                 return this.transacaoRepository.save(transacao);
         }

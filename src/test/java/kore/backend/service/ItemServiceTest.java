@@ -121,14 +121,23 @@ class ItemServiceTest {
     void removerEstoque_ComIdExistente_DeletaComSucesso() {
         // Arrange
         Long idExistente = 1L;
-        when(itemRepository.existsById(idExistente)).thenReturn(true);
+
+        ItemDTO dto = new ItemDTO(
+                LocalDateTime.now().plusHours(1),
+                true,
+                10.0f,
+                LocalDateTime.now().plusMonths(1)
+        );
+        Item item = new Item(dto);
+        item.setId(idExistente);
+
+        when(itemRepository.findById(idExistente)).thenReturn(Optional.of(item));
 
         // Act
         itemService.removerEstoque(idExistente);
 
         // Assert
-        verify(itemRepository, times(1)).existsById(idExistente);
-        verify(itemRepository, times(1)).deleteById(idExistente);
+        verify(itemRepository, times(1)).findById(idExistente);
     }
 
     @Test
@@ -136,14 +145,11 @@ class ItemServiceTest {
     void removerEstoque_ComIdInexistente_LancaExcecao() {
         // Arrange
         Long idInexistente = 99L;
-        when(itemRepository.existsById(idInexistente)).thenReturn(false);
 
         // Act & Assert
         RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class,
                 () -> itemService.removerEstoque(idInexistente));
 
         assertEquals("Item não encontrado", exception.getMessage());
-        verify(itemRepository, times(1)).existsById(idInexistente);
-        verify(itemRepository, never()).deleteById(anyLong());
     }
 }

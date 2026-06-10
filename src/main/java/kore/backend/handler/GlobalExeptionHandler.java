@@ -32,13 +32,11 @@ public class GlobalExeptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<MessageErrorResponse> handlerIllegalArgumentException(
-            IllegalArgumentException ex
-    ){
+            IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageErrorResponse(ex.getMessage()));
     }
 
-
     record MessageErrorResponse(
-            String message
-    ){}
+            String message) {
+    }
 }
