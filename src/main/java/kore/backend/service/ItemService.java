@@ -56,7 +56,7 @@ public class ItemService {
     @Transactional
     public void removerEstoque(Long id) {
         Item i = itemRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto nao encontrado", id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Item não encontrado", id));
         i.setSeAtivo(false);
     }
 
