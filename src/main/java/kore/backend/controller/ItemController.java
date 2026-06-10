@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/estoque")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ItemController {
     private final ItemService itemService;
     public ItemController(ItemService itemService) {
@@ -20,6 +21,7 @@ public class ItemController {
     @GetMapping("/{id}")
     public ResponseEntity<List<Item>> buscarEstoque(@PathVariable Long id){
         List<Item> estoque = itemService.listarEstoque(id);
+        System.out.println(estoque.size());
         if (estoque.isEmpty()) {
             return ResponseEntity.noContent().build();
         }

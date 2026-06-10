@@ -29,6 +29,7 @@ public class ItemService {
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + fkProduto));
         List<Item> estoque = new ArrayList<>();
         for (int i = 0; i < quantidade; i++) {
+
             Item item = new Item(itemDTO);
             item.setProduto(produto);
             estoque.add(item);
