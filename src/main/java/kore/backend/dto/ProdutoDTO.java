@@ -16,5 +16,7 @@ public record ProdutoDTO(
         Boolean possuiValidade,
         @NotNull
         @Min(0)
-        Integer qtdMinAlerta
+        Integer qtdMinAlerta,
+        @NotNull
+        String tipo
 ) {}

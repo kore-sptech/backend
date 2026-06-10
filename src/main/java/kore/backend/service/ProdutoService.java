@@ -34,6 +34,7 @@ public class ProdutoService {
         p.setDescricao(produtoDTO.descricao());
         p.setNome(produtoDTO.nome());
         p.setQtdMinAlerta(produtoDTO.qtdMinAlerta());
+        p.setTipo(produtoDTO.tipo());
         return produtoRepository.save(p);
     }
 
