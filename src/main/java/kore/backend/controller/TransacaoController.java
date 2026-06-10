@@ -66,8 +66,7 @@ public class TransacaoController {
     public ResponseEntity<Transacao> criarTransacao(
             @RequestBody TransacaoDTO transacaoDTO,
             @AuthenticationPrincipal Usuario usuario,
-            @PathVariable Long agendamentoId
-            ) {
+            @PathVariable Long agendamentoId) {
         Transacao transacao = this.transacaoService.criarTransacao(transacaoDTO, usuario, agendamentoId);
 
         return ResponseEntity.ok(transacao);
