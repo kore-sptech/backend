@@ -29,6 +29,14 @@ public class ItemController {
         }
         return ResponseEntity.ok().body(estoque);
     }
+    @GetMapping("/agendamento/{id}")
+    public ResponseEntity<List<Item>> buscarEstoquePorAgendamento(@PathVariable Long id){
+        List<Item> estoque = itemService.buscarItensPorAgendamento(id);
+        if (estoque.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok().body(estoque);
+    }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removerEstoque(@PathVariable Long id){
         itemService.removerEstoque(id);

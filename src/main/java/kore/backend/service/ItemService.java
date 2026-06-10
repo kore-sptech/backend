@@ -71,4 +71,11 @@ public class ItemService {
         i.setSeAtivo(false);
         return itemRepository.save(i);
     }
+
+    public List<Item> buscarItensPorAgendamento(Long idSessao){
+        List<Item> itens = itemRepository.buscarPorIdDoAgendamento(idSessao)
+                .orElse(Collections.emptyList());
+        ;
+        return itens;
+    }
 }
