@@ -1,6 +1,6 @@
 package kore.backend.service;
 
-import kore.backend.dto.ProdutoDTO;
+import kore.backend.dto.produto.ProdutoDTO;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.model.Produto;
 import kore.backend.repository.ProdutoRepository;
