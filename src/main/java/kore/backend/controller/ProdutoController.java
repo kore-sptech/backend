@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import kore.backend.dto.ProdutoDTO;
+import kore.backend.dto.produto.ProdutoDTO;
 import kore.backend.model.Produto;
 import kore.backend.service.ProdutoService;
 import org.springframework.dao.DataAccessException;

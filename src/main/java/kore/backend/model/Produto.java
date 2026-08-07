@@ -1,7 +1,7 @@
 package kore.backend.model;
 
 import jakarta.persistence.*;
-import kore.backend.dto.ProdutoDTO;
+import kore.backend.dto.produto.ProdutoDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,6 +30,10 @@ public class Produto {
     @Column(name = "qtdMinAlerta")
     private Integer qtdMinAlerta;
 
+
+    @Column(name = "fkUsuario")
+    private Long fkUsuario;
+
     @Column(name = "tipo", nullable = false)
     private String tipo;
 
@@ -40,18 +44,20 @@ public class Produto {
         this.nome = produtoDTO.nome();
         this.descricao = produtoDTO.descricao();
         this.possuiValidade = produtoDTO.possuiValidade();
+        this.fkUsuario = produtoDTO.usuario();
         this.tipo = produtoDTO.tipo();
     }
 
     public Produto() {
     }
 
-    public Produto(Long id, String nome, String descricao, Boolean possuiValidade, Integer qtdMinAlerta, String tipo) {
+    public Produto(Long id, String nome, String descricao, Boolean possuiValidade, Integer qtdMinAlerta, Long fkUsuario, String tipo) {
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;
         this.possuiValidade = possuiValidade;
         this.qtdMinAlerta = qtdMinAlerta;
+        this.fkUsuario = fkUsuario;
         this.tipo = tipo;
     }
 
