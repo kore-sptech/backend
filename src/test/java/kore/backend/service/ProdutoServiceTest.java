@@ -31,7 +31,7 @@ class ProdutoServiceTest {
     @DisplayName("Deve salvar um produto com sucesso")
     void salvarProduto_ComDadosValidos_RetornaProdutoSalvo() {
         // Arrange (Preparar)
-        ProdutoDTO dto = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10);
+        ProdutoDTO dto = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10, null);
         Produto produtoSalvo = new Produto(dto);
         // Assumindo que a entidade geraria um ID no banco
         produtoSalvo.setId(1L);
@@ -52,8 +52,8 @@ class ProdutoServiceTest {
     @DisplayName("Deve listar todos os produtos")
     void listarTodosProdutos_DeveRetornarListaDeProdutos() {
         // Arrange
-        ProdutoDTO dto1 = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10);
-        ProdutoDTO dto2 = new ProdutoDTO("Mouse", "Mouse Gamer", false, 5);
+        ProdutoDTO dto1 = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10, null);
+        ProdutoDTO dto2 = new ProdutoDTO("Mouse", "Mouse Gamer", false, 5, null);
         List<Produto> listaMock = List.of(new Produto(dto1), new Produto(dto2));
 
         when(produtoRepository.findAll()).thenReturn(listaMock);
@@ -72,7 +72,7 @@ class ProdutoServiceTest {
     void atualizarProduto_ComIdExistente_RetornaProdutoAtualizado() {
         // Arrange
         Long idExistente = 1L;
-        ProdutoDTO dtoAtualizacao = new ProdutoDTO("Monitor", "Monitor 144hz", false, 20);
+        ProdutoDTO dtoAtualizacao = new ProdutoDTO("Monitor", "Monitor 144hz", false, 20, null);
         Produto produtoExistente = new Produto(); // Instância original antes do update
         produtoExistente.setId(idExistente);
         produtoExistente.setNome("Monitor Antigo");
@@ -97,7 +97,7 @@ class ProdutoServiceTest {
     void atualizarProduto_ComIdInexistente_LancaExcecao() {
         // Arrange
         Long idInexistente = 99L;
-        ProdutoDTO dtoAtualizacao = new ProdutoDTO("Monitor", "Monitor 144hz", false, 20);
+        ProdutoDTO dtoAtualizacao = new ProdutoDTO("Monitor", "Monitor 144hz", false, 20, null);
 
         when(produtoRepository.findById(idInexistente)).thenReturn(Optional.empty());
 
@@ -135,8 +135,10 @@ class ProdutoServiceTest {
         RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class,
                 () -> produtoService.deletarProduto(idInexistente));
 
-        // Assert extra: notei que na service está escrito "Usuário não encontrado" em vez de "Produto"
-        assertTrue(exception.getMessage().contains("Usuário não encontrado") || exception.getMessage().contains("Produto"));
+        // Assert extra: notei que na service está escrito "Usuário não encontrado" em
+        // vez de "Produto"
+        assertTrue(exception.getMessage().contains("Usuário não encontrado")
+                || exception.getMessage().contains("Produto"));
 
         verify(produtoRepository, times(1)).existsById(idInexistente);
         verify(produtoRepository, never()).deleteById(anyLong());

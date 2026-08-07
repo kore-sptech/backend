@@ -60,7 +60,6 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-
     @Transactional
     public void deletar(Long id) {
         if (!usuarioRepository.existsById(id)) {
