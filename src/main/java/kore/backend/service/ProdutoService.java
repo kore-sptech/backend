@@ -1,10 +1,11 @@
 package kore.backend.service;
 
 import jakarta.transaction.Transactional;
-import kore.backend.dto.ProdutoDTO;
+import kore.backend.dto.produto.ProdutoDTO;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.model.Produto;
 import kore.backend.repository.ProdutoRepository;
+import kore.backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,15 +13,20 @@ import java.util.List;
 @Service
 public class ProdutoService {
     private final ProdutoRepository produtoRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public ProdutoService(ProdutoRepository produtoRepository) {
+    public ProdutoService(ProdutoRepository produtoRepository, UsuarioRepository usuarioRepository) {
         this.produtoRepository = produtoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Transactional
     public Produto salvarProduto(ProdutoDTO produtoDTO) {
-        Produto p = new Produto(produtoDTO);
-        return produtoRepository.save(p);
+        if(usuarioRepository.existsById(produtoDTO.usuario())){
+            Produto p = new Produto(produtoDTO);
+            return produtoRepository.save(p);
+        }
+        throw new RecursoNaoEncontradoException("Usuario nao encontrado", produtoDTO.usuario());
     }
 
     public List<Produto> listarTodosProdutos() {

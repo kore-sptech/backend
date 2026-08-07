@@ -1,6 +1,5 @@
-package kore.backend.dto;
+package kore.backend.dto.produto;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,5 +15,7 @@ public record ProdutoDTO(
         Boolean possuiValidade,
         @NotNull
         @Min(0)
-        Integer qtdMinAlerta
+        Integer qtdMinAlerta,
+        @NotNull
+        Long usuario
 ) {}
