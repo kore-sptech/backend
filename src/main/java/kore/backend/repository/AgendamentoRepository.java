@@ -44,4 +44,8 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
         @Query("select a from Agendamento a left join fetch a.referencias where a.id = :id")
         Optional<Agendamento> findByIdWithReferencias(@Param("id") Long id);
 
+        List<Agendamento> findByUsuarioAndFimAfterAndStatusNotOrderByInicioAsc(
+                        Usuario usuario,
+                        LocalDateTime referencia,
+                        StatusAgendamento status);
 }

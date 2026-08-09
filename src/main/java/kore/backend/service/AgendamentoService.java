@@ -2,6 +2,7 @@ package kore.backend.service;
 
 import java.nio.file.Paths;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.dto.AgendamentoResponseDTO;
+import kore.backend.dto.HorarioDisponivelDTO;
 import kore.backend.exception.AgendamentoNaoEncondradoException;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Foto;
@@ -35,6 +37,8 @@ public class AgendamentoService {
     private final AgendamentoRepository agendamentoRepository;
     private final ItemRepository itemRepository;
     private final TransacaoRepository transacaoRepository;
+
+    private static final Duration DURACAO_PADRAO = Duration.ofMinutes(30);
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FotoRepository fotoRepository,
             ItemRepository itemRepository, TransacaoRepository transacaoRepository) {
@@ -235,5 +239,34 @@ public class AgendamentoService {
         agendamento.setStatus(StatusAgendamento.CANCELADO);
 
         this.agendamentoRepository.save(agendamento);
+    }
+
+    public HorarioDisponivelDTO proximoDisponivel(Usuario usuario) {
+
+        LocalDateTime agora = LocalDateTime.now();
+
+        List<Agendamento> agendamentos = agendamentoRepository
+                .findByUsuarioAndFimAfterAndStatusNotOrderByInicioAsc(
+                        usuario, agora, StatusAgendamento.CANCELADO);
+
+        LocalDateTime cursor = agora;
+
+        for (Agendamento agendamento : agendamentos) {
+
+            LocalDateTime inicioOcupado = agendamento.getInicio();
+            LocalDateTime fimOcupado = agendamento.getFim();
+
+            if (!fimOcupado.isAfter(cursor)) {
+                continue;
+            }
+
+            if (!cursor.plus(DURACAO_PADRAO).isAfter(inicioOcupado)) {
+                return new HorarioDisponivelDTO(cursor, cursor.plus(DURACAO_PADRAO));
+            }
+
+            cursor = fimOcupado;
+        }
+
+        return new HorarioDisponivelDTO(cursor, cursor.plus(DURACAO_PADRAO));
     }
 }

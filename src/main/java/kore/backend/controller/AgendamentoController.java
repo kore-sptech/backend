@@ -3,6 +3,7 @@ package kore.backend.controller;
 import kore.backend.config.OpenApiConfig;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.dto.AgendamentoResponseDTO;
+import kore.backend.dto.HorarioDisponivelDTO;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Usuario;
 import kore.backend.service.AgendamentoService;
@@ -16,7 +17,6 @@ import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/agendamentos")
@@ -75,4 +75,15 @@ public class AgendamentoController {
         this.agendamentoService.cancelar(agendamentoId, usuario);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/proximo-disponivel")
+    public ResponseEntity<HorarioDisponivelDTO> proximoDisponivel(
+            @AuthenticationPrincipal Usuario usuario) {
+
+        HorarioDisponivelDTO horario = agendamentoService
+                .proximoDisponivel(usuario);
+
+        return ResponseEntity.ok(horario);
+    }
+
 }
