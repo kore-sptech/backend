@@ -9,7 +9,7 @@ services:
       - "127.0.0.1:3307:3306"
     command: --bind-address=0.0.0.0
     volumes:
-      - MYSQL_DATA:/var/lib/mysql
+      - MYSQL_DATA_DEV:/var/lib/mysql
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
     healthcheck:
       test:
@@ -32,11 +32,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: prod
-    image: kore-backend:prod
-    restart: unless-stopped
+      target: dev
+    image: kore-backend:dev
     ports:
       - "8080:8080"
+      # porta de debug remoto (attach do IDE), opcional
+      - "5005:5005"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
       SPRING_DATASOURCE_USERNAME: root
@@ -44,14 +45,21 @@ services:
       JWT_SECRET: ${JWT_SECRET:-my-secret-key}
       FRONT_END_URL: ${FRONT_END_URL:-http://localhost:5173}
     volumes:
-      # persiste as fotos enviadas via UploadFotoController fora do container
-      # (o código salva em "../front-end/public/uploads/", que a partir do
-      # WORKDIR /app do container resolve para /front-end/public/uploads)
-      - uploads:/front-end/public/uploads
+      # live reload: o código do host é montado no container; o
+      # dev-entrypoint.sh observa src/ e recompila a cada alteração,
+      # o que dispara o restart automático do spring-boot-devtools
+      - .:/app
+      # target isolado do host (volume anônimo) para não misturar
+      # artefatos de build do container com os do seu SO local
+      - /app/target
+      # cache de dependências do Maven entre reinícios do container
+      - maven_repo:/root/.m2
+      - uploads_dev:/front-end/public/uploads
     depends_on:
       database:
         condition: service_healthy
 
 volumes:
-  MYSQL_DATA:
-  uploads:
+  MYSQL_DATA_DEV:
+  maven_repo:
+  uploads_dev:
