@@ -6,7 +6,8 @@
 --     nome VARCHAR(45) NOT NULL,
 --     descricao VARCHAR(45) NOT NULL,
 --     possui_validade VARCHAR(45) NOT NULL,
---     qtd_min_alerta VARCHAR(45) NOT NULL
+--     qtd_min_alerta VARCHAR(45) NOT NULL,
+--     FOREIGN KEY (fk_categoria) REFERENCES Categoria(id_categoria)
 -- );
 --
 -- -- Tabela Cliente
@@ -47,6 +48,11 @@
 --     fk_sessao INT,
 --     FOREIGN KEY (fk_produto) REFERENCES Produto(id_produto),
 --     FOREIGN KEY (fk_sessao) REFERENCES Sessao(id_sessao)
+-- );
+-- CREATE TABLE IF NOT EXIST Categoria (
+--    id_categoria INT AUTO_INCREMENT PRIMARY KEY,
+--    nome VARCHAR (45) NOT NULL,
+--    descricao VARCHAR (150)
 -- );
 --
 -- -- Tabela Usuario
