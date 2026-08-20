@@ -9,6 +9,7 @@ import kore.backend.service.UsuarioService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
@@ -36,7 +37,13 @@ public class UsuarioController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> buscar(
-            @PathVariable Long id) {
+            @PathVariable Long id, Authentication authentication) {
+
+        Usuario usuarioLogado = (Usuario) authentication.getPrincipal();
+        if (!usuarioLogado.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         Usuario p = usuarioService.buscar(id);
         return ResponseEntity.ok(UsuarioMapper.toResponse(p));
     }
@@ -50,14 +57,28 @@ public class UsuarioController {
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> atualizar(
             @PathVariable Long id,
-            @RequestBody UsuarioDTO usuarioDTO) {
+            @RequestBody UsuarioDTO usuarioDTO,
+            Authentication authentication) {
+
+        Usuario usuarioLogado = (Usuario) authentication.getPrincipal();
+        if (!usuarioLogado.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         Usuario p = usuarioService.atualizar(usuarioDTO, id);
         return ResponseEntity.ok(UsuarioMapper.toResponse(p));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        Usuario usuarioLogado = (Usuario) authentication.getPrincipal();
+        if (!usuarioLogado.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         usuarioService.deletar(id);
         return ResponseEntity.noContent().build();
     }
