@@ -1,5 +1,6 @@
 package kore.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import kore.backend.dto.produto.ProdutoDTO;
 import lombok.Getter;
@@ -30,12 +31,16 @@ public class Produto {
     @Column(name = "qtdMinAlerta")
     private Integer qtdMinAlerta;
 
-
     @Column(name = "fkUsuario")
     private Long fkUsuario;
 
     @Column(name = "tipo", nullable = false)
     private String tipo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("produtos")
+    @JoinColumn(name = "fk_categoria")
+    private Categoria categoria;
 
     @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Item> itens = new ArrayList<>();
@@ -46,6 +51,7 @@ public class Produto {
         this.possuiValidade = produtoDTO.possuiValidade();
         this.fkUsuario = produtoDTO.usuario();
         this.tipo = produtoDTO.tipo();
+        this.fkUsuario = produtoDTO.categoriaId();
     }
 
     public Produto() {

@@ -49,7 +49,7 @@ services:
       # live reload: o código do host é montado no container; o
       # dev-entrypoint.sh observa src/ e recompila a cada alteração,
       # o que dispara o restart automático do spring-boot-devtools
-      - .:/app
+      - .:/app:z
       # target isolado do host (volume anônimo) para não misturar
       # artefatos de build do container com os do seu SO local
       - /app/target
