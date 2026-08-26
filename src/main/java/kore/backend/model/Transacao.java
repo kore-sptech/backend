@@ -60,7 +60,7 @@ public class Transacao {
     @Override
     public String toString() {
         return "Transacao{" +
-                "id=" + id +
+                "idd=" + id +
                 ", valor=" + valor +
                 ", nome='" + nome + '\'' +
                 ", tipo=" + tipo +

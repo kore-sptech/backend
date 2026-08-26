@@ -32,7 +32,7 @@ class ProdutoServiceTest {
     @DisplayName("Deve salvar um produto com sucesso")
     void salvarProduto_ComDadosValidos_RetornaProdutoSalvo() {
         // Arrange (Preparar)
-        ProdutoDTO dto = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10, null, null);
+        ProdutoDTO dto = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10, null, null, null);
         Produto produtoSalvo = new Produto(dto);
         // Assumindo que a entidade geraria um ID no banco
         produtoSalvo.setId(1L);
@@ -53,8 +53,8 @@ class ProdutoServiceTest {
     @DisplayName("Deve listar todos os produtos")
     void listarTodosProdutos_DeveRetornarListaDeProdutos() {
         // Arrange
-        ProdutoDTO dto1 = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10, null, null);
-        ProdutoDTO dto2 = new ProdutoDTO("Mouse", "Mouse Gamer", false, 5, null, null);
+        ProdutoDTO dto1 = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10, null, null, null);
+        ProdutoDTO dto2 = new ProdutoDTO("Mouse", "Mouse Gamer", false, 5, null, null, null);
         List<Produto> listaMock = List.of(new Produto(dto1), new Produto(dto2));
 
         when(produtoRepository.findAll()).thenReturn(listaMock);
@@ -73,7 +73,7 @@ class ProdutoServiceTest {
     void atualizarProduto_ComIdExistente_RetornaProdutoAtualizado() {
         // Arrange
         Long idExistente = 1L;
-        ProdutoDTO dtoAtualizacao = new ProdutoDTO("Monitor", "Monitor 144hz", false, 20, null, null);
+        ProdutoDTO dtoAtualizacao = new ProdutoDTO("Monitor", "Monitor 144hz", false, 20, null, null, null);
         Produto produtoExistente = new Produto(); // Instância original antes do update
         produtoExistente.setId(idExistente);
         produtoExistente.setNome("Monitor Antigo");
@@ -98,7 +98,7 @@ class ProdutoServiceTest {
     void atualizarProduto_ComIdInexistente_LancaExcecao() {
         // Arrange
         Long idInexistente = 99L;
-        ProdutoDTO dtoAtualizacao = new ProdutoDTO("Monitor", "Monitor 144hz", false, 20, null, null);
+        ProdutoDTO dtoAtualizacao = new ProdutoDTO("Monitor", "Monitor 144hz", false, 20, null, null, null);
 
         when(produtoRepository.findById(idInexistente)).thenReturn(Optional.empty());
 
