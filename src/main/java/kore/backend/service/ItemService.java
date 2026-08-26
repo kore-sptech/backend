@@ -34,7 +34,7 @@ public class ItemService {
     @Transactional
     public List<Item> adicionarEstoque(ItemDTO itemDTO, Integer quantidade, Long fkProduto) {
         Produto produto = produtoRepository.findById(fkProduto)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + fkProduto));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: ", fkProduto));
         List<Item> estoque = new ArrayList<>();
         for (int i = 0; i < quantidade; i++) {
 

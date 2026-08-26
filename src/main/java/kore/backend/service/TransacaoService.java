@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import kore.backend.exception.AgendamentoNaoEncondradoException;
+import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.model.Agendamento;
 import kore.backend.repository.AgendamentoRepository;
 import org.springframework.data.domain.Page;
@@ -44,7 +45,7 @@ public class TransacaoService {
                 Transacao transacao = new Transacao(transacaoDTO);
 
                 if (transacao.getValor() <= 0) {
-                        throw new RuntimeException("Valor da transação deve ser maior que zero");
+                        throw new IllegalArgumentException("Valor da transação deve ser maior que zero");
                 }
 
                 transacao.setUsuario(usuario);
@@ -59,7 +60,7 @@ public class TransacaoService {
                                 .orElseThrow(AgendamentoNaoEncondradoException::new);
 
                 if (transacao.getValor() <= 0) {
-                        throw new RuntimeException("Valor da transação deve ser maior que zero");
+                        throw new IllegalArgumentException("Valor da transação deve ser maior que zero");
                 }
 
                 transacao.setUsuario(usuario);
@@ -173,14 +174,14 @@ public class TransacaoService {
         @Transactional
         public void deletarTransacao(Long id) {
                 this.transacaoRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+                                .orElseThrow(() -> new RecursoNaoEncontradoException("Transação não encontrada", id));
                 this.transacaoRepository.deleteById(id);
         }
 
         public Transacao atualizarTransacao(Long id, TransacaoDTO transacaoDTO) {
 
                 Transacao transacao = this.transacaoRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+                                .orElseThrow(() -> new RecursoNaoEncontradoException("Transação não encontrada", id));
 
                 transacao.setValor(transacaoDTO.valor());
                 transacao.setNome(transacaoDTO.nome());

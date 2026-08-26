@@ -30,10 +30,23 @@ public class UploadFotoController {
     public UploadFotoController(FotoService fotoService) {
         this.fotoService = fotoService;
     }
-
     @PostMapping
     public ResponseEntity<?> upload(
             @RequestParam("foto") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body("Arquivo vazio");
+        }
+
+        String contentType = file.getContentType();
+
+        if (!"image/jpeg".equals(contentType)
+                && !"image/png".equals(contentType)) {
+            return ResponseEntity.badRequest()
+                    .body("Formato de arquivo não permitido");
+        }
+
         try {
             File dir = new File(UPLOAD_DIR);
             if (!dir.exists())

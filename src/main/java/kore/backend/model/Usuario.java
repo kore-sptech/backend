@@ -83,7 +83,6 @@ public class Usuario implements UserDetails {
                 "id=" + id +
                 ", nome='" + nome + '\'' +
                 ", email='" + email + '\'' +
-                ", senha='" + senha + '\'' +
                 ", agendamentos=" + agendamentos +
                 '}';
     }

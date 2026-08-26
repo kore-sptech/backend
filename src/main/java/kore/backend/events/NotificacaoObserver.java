@@ -1,6 +1,7 @@
 package kore.backend.events;
 
 import jakarta.transaction.Transactional;
+import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Notificacao;
 import kore.backend.model.enums.StatusAgendamento;
@@ -55,8 +56,8 @@ public class NotificacaoObserver {
 
         Agendamento agendamento = agendamentoRepository
                 .findByIdWithReferencias(agendamentoId)
-                .orElseThrow(() -> new RuntimeException(
-                        "Agendamento não encontrado: " + agendamentoId));
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Agendamento não encontrado: ", agendamentoId));
 
         if (notificacaoRepository.existsByAgendamento(agendamento)) {
             log.info("Notificação já existente para agendamento ID: {}. Ignorando.", agendamentoId);
