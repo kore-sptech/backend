@@ -39,7 +39,8 @@ public class SecurityConfiguration {
             "/swagger-resources/**",
             "/swagger-ui.html",
             "/sse/stream",
-            "/auth/**"
+            "/auth/**",
+            "/error"
     };
 
     @Bean

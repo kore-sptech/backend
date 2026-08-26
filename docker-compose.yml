@@ -5,6 +5,7 @@ services:
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
       MYSQL_DATABASE: test
+      MYSQL_LOWER_CASE_TABLE_NAMES: "1"
     ports:
       - "127.0.0.1:3307:3306"
     command: --bind-address=0.0.0.0

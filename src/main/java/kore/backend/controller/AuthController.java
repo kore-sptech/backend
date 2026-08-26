@@ -31,6 +31,7 @@ public class AuthController {
     @PostMapping("/login")
     @SecurityRequirements
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
+
         try {
             var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.email(), loginDTO.senha());
             var auth = this.authenticationManager.authenticate(usernamePassword);

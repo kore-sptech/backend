@@ -256,17 +256,25 @@ public class AgendamentoService {
             LocalDateTime inicioOcupado = agendamento.getInicio();
             LocalDateTime fimOcupado = agendamento.getFim();
 
+            // se esse agendamento já terminou antes do cursor, ignora
             if (!fimOcupado.isAfter(cursor)) {
                 continue;
             }
 
-            if (!cursor.plus(DURACAO_PADRAO).isAfter(inicioOcupado)) {
-                return new HorarioDisponivelDTO(cursor, cursor.plus(DURACAO_PADRAO));
+            // existe espaço livre entre o cursor e o início desse agendamento?
+            Duration gap = Duration.between(cursor, inicioOcupado);
+            if (gap.compareTo(DURACAO_PADRAO) >= 0) {
+                // preenche a janela INTEIRA até o próximo agendamento começar
+                return new HorarioDisponivelDTO(cursor, inicioOcupado);
             }
 
+            // não coube: avança o cursor para o fim desse agendamento
             cursor = fimOcupado;
         }
 
+        // não achou gap entre os agendamentos existentes ->
+        // horário logo após o último agendamento, sem próximo compromisso pra limitar o
+        // "fim"
         return new HorarioDisponivelDTO(cursor, cursor.plus(DURACAO_PADRAO));
     }
 }
