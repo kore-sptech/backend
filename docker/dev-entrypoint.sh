@@ -4,29 +4,41 @@ set -e
 cd /app
 
 # Nota sobre o cache do Maven: o volume nomeado "maven_repo" (montado em
-# /root/.m2 pelo compose) começa vazio na primeira execução, mesmo que a
-# imagem já tenha baixado as dependências durante o build (aquele cache
-# fica em outra camada da imagem, não neste volume). Por isso a primeira
-# subida roda ONLINE para popular o volume; nas próximas, com o volume já
-# populado, dá pra usar -o (offline) e ficar bem mais rápido.
-MVN_MODE="-o"
+# /root/.m2 pelo compose) pode ficar populado, mas ainda assim não conter
+# uma dependência recém-adicionada. Nesse caso, o modo offline quebra a
+# primeira subida. Por isso tentamos offline primeiro e, se falhar, refazemos
+# online para atualizar o cache.
+MVN_CAN_TRY_OFFLINE=1
+
 if [ -z "$(ls -A /root/.m2 2>/dev/null)" ]; then
-  echo "[dev-entrypoint] cache do Maven (/root/.m2) vazio, baixando dependências..."
-  MVN_MODE=""
+  echo "[dev-entrypoint] cache do Maven (/root/.m2) vazio, baixando dependências online..."
+  MVN_CAN_TRY_OFFLINE=0
 fi
 
+run_maven_with_fallback() {
+  if [ "$MVN_CAN_TRY_OFFLINE" -eq 1 ]; then
+    if mvn -o "$@"; then
+      return 0
+    fi
+
+    echo "[dev-entrypoint] falha no modo offline, tentando online..."
+  fi
+
+  mvn "$@"
+}
+
 echo "[dev-entrypoint] compilando pela primeira vez..."
-mvn $MVN_MODE compile -q
+run_maven_with_fallback compile -q
 
 echo "[dev-entrypoint] iniciando aplicação (mvn spring-boot:run)..."
-mvn $MVN_MODE spring-boot:run \
+run_maven_with_fallback spring-boot:run \
     -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" &
 APP_PID=$!
 
 echo "[dev-entrypoint] observando alterações em src/ para live reload..."
 while inotifywait -r -e modify,create,delete,move src pom.xml; do
   echo "[dev-entrypoint] mudança detectada, recompilando..."
-  mvn -o compile -q || echo "[dev-entrypoint] falha ao compilar, aguardando próxima mudança"
+  run_maven_with_fallback compile -q || echo "[dev-entrypoint] falha ao compilar, aguardando próxima mudança"
 done &
 WATCH_PID=$!
 

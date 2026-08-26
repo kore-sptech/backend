@@ -10,7 +10,7 @@ services:
       - "127.0.0.1:3307:3306"
     command: --bind-address=0.0.0.0
     volumes:
-      - MYSQL_DATA_DEV:/var/lib/mysql
+      - MYSQL_DATA_DEV:/var/lib/mysql:z
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
     healthcheck:
       test:
@@ -35,6 +35,8 @@ services:
       dockerfile: Dockerfile
       target: dev
     image: kore-backend:dev
+    env_file:
+      - .env
     ports:
       - "8080:8080"
       # porta de debug remoto (attach do IDE), opcional
@@ -55,7 +57,6 @@ services:
       - /app/target
       # cache de dependências do Maven entre reinícios do container
       - maven_repo:/root/.m2
-      - uploads_dev:/front-end/public/uploads
     depends_on:
       database:
         condition: service_healthy
@@ -63,4 +64,3 @@ services:
 volumes:
   MYSQL_DATA_DEV:
   maven_repo:
-  uploads_dev:

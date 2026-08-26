@@ -1,17 +1,10 @@
 package kore.backend.service;
 
-import java.nio.file.Paths;
-import java.time.DayOfWeek;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
-import kore.backend.model.Transacao;
 import kore.backend.model.Usuario;
 import kore.backend.model.enums.StatusAgendamento;
 import kore.backend.repository.FotoRepository;
@@ -34,6 +27,7 @@ import kore.backend.repository.AgendamentoRepository;
 public class AgendamentoService {
 
     private final FotoRepository fotoRepository;
+    private final S3StorageService s3StorageService;
     private final AgendamentoRepository agendamentoRepository;
     private final ItemRepository itemRepository;
     private final TransacaoRepository transacaoRepository;
@@ -41,11 +35,12 @@ public class AgendamentoService {
     private static final Duration DURACAO_PADRAO = Duration.ofMinutes(30);
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FotoRepository fotoRepository,
-            ItemRepository itemRepository, TransacaoRepository transacaoRepository) {
+            ItemRepository itemRepository, TransacaoRepository transacaoRepository, S3StorageService s3StorageService) {
         this.agendamentoRepository = agendamentoRepository;
         this.fotoRepository = fotoRepository;
         this.itemRepository = itemRepository;
         this.transacaoRepository = transacaoRepository;
+        this.s3StorageService = s3StorageService;
     }
 
     @Transactional
@@ -106,7 +101,7 @@ public class AgendamentoService {
         List<Foto> fotos = this.fotoRepository.findAllByAgendamento(agendamento);
 
         for (Foto foto : fotos)
-            Paths.get(foto.getImageUrl()).toFile().delete();
+            this.s3StorageService.delete(foto.getNome());
 
         this.fotoRepository.deleteAll(fotos);
         this.fotoRepository.deleteAllByAgendamento(agendamento);
