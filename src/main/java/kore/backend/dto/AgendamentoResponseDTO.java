@@ -46,7 +46,7 @@ public class AgendamentoResponseDTO {
             this.referencias = refs.stream().peek(
                     f -> {
                         String url = f.getImageUrl();
-                        if (url != null && url.length() > 0) {
+                        if (url != null && url.startsWith("/")) {
                             // remove leading slash apenas se existir
                             f.setImageUrl(url.substring(1));
                         }

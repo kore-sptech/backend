@@ -1,28 +1,28 @@
 package kore.backend.service;
 
-import kore.backend.dto.FotoRequestDTO;
+import java.io.IOException;
+
 import kore.backend.model.Foto;
 import kore.backend.repository.FotoRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FotoService {
 
-    private  final FotoRepository fotoRepository;
+    private final FotoRepository fotoRepository;
+    private final S3StorageService s3StorageService;
 
-    public FotoService(FotoRepository fotoRepository) {
+    public FotoService(FotoRepository fotoRepository, S3StorageService s3StorageService) {
         this.fotoRepository = fotoRepository;
+        this.s3StorageService = s3StorageService;
     }
 
+    public Foto salvar(MultipartFile file) throws IOException {
+        String objectKey = this.s3StorageService.generateObjectKey(file.getOriginalFilename());
+        String imageUrl = this.s3StorageService.upload(objectKey, file);
 
-
-    public Foto salvar(
-            FotoRequestDTO request
-    ){
-        Foto foto = new Foto(
-                request.imageUrl(),
-                request.nome()
-        );
+        Foto foto = new Foto(imageUrl, objectKey);
 
         return this.fotoRepository.save(foto);
     }
