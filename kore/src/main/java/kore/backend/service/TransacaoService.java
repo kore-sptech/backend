@@ -115,8 +115,6 @@ public class TransacaoService {
                 List<Agendamento> agendamentos = this.agendamentoRepository
                                 .findByInicioBetweenAndUsuario(inicioMesAtual, inicioProximoMes, usuario);
 
-                System.out.println(agendamentos);
-
                 Double faturamentoDeAgendamentos = agendamentos.stream()
                                 .filter(a -> !a.getStatus().equals(StatusAgendamento.CANCELADO))
                                 .mapToDouble(a -> a.getPreco() != null ? a.getPreco() : 0.0)

@@ -25,7 +25,6 @@ public class ItemController {
     @GetMapping("/{id}")
     public ResponseEntity<List<Item>> buscarEstoque(@PathVariable Long id) {
         List<Item> estoque = itemService.listarEstoque(id);
-        System.out.println(estoque.size());
         if (estoque.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
