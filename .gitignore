@@ -1,14 +1,17 @@
-/uploads
-./uploads/*
+/target
+/kore/target/*
 
-/uploads
-/target
-/target/*
-
-/target
-./target
-/target
+/kore/target
+./kore/target
 ./.idea
 .idea*
+
+.env
+
+
+/notification/target/*
+
+/notification/target
+./notification/target
 
 .env

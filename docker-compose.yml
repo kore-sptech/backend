@@ -8,10 +8,12 @@ services:
       MYSQL_LOWER_CASE_TABLE_NAMES: "1"
     ports:
       - "127.0.0.1:3307:3306"
-    command: --bind-address=0.0.0.0
+    command: --bind-address=0.0.0.0 --socket=/var/run/mysqld/mysqld.sock
+    tmpfs:
+      - /var/run/mysqld
     volumes:
       - MYSQL_DATA:/var/lib/mysql:z
-      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
+      - ./kore/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
     healthcheck:
       test:
         [
@@ -31,7 +33,7 @@ services:
 
   backend:
     build:
-      context: .
+      context: ./kore
       dockerfile: Dockerfile
       target: prod
     image: kore-backend:prod
