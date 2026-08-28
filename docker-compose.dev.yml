@@ -62,7 +62,51 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  kore-notification:
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
+      target: dev
+    image: kore-notification:dev
+    env_file:
+      - .env
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+    volumes:
+      - ./notification:/app:z
+      - /app/target
+      - maven_repo:/root/.m2
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   MYSQL_DATA_DEV:
   maven_repo:
+  rabbitmq_data:
