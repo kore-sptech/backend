@@ -1,4 +1,4 @@
-package kore.notification.config;
+package kore.backend.config;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -14,12 +14,12 @@ public class RabbitConfig {
     private String QUEUE_NAME;
 
     @Bean
-    Queue queue() {
+    public Queue queue() {
         return new Queue(QUEUE_NAME, true);
     }
 
     @Bean
-    MessageConverter jsonMessageConverter() {
+    public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 

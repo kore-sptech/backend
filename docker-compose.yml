@@ -3,17 +3,18 @@ services:
     image: mysql:9
     user: "0:0"
     environment:
+      MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
       MYSQL_DATABASE: test
       MYSQL_LOWER_CASE_TABLE_NAMES: "1"
     ports:
-      - "127.0.0.1:3307:3306"
+      - "127.0.0.1:3306:3306"
     command: --bind-address=0.0.0.0 --socket=/var/run/mysqld/mysqld.sock
     tmpfs:
       - /var/run/mysqld
     volumes:
       - MYSQL_DATA:/var/lib/mysql:z
-      - ./kore/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
+      # - ./kore/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
     healthcheck:
       test:
         [
@@ -51,7 +52,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
-
+      rabbitmq:
+        condition: service_healthy
   kore-notification:
     build:
       context: ./notification
@@ -94,3 +96,5 @@ services:
       start_period: 30s
 volumes:
   MYSQL_DATA:
+  rabbitmq_data:
+  maven_repo:
