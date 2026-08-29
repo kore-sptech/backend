@@ -2,6 +2,9 @@ package kore.notification.utils;
 
 import kore.notification.entities.valueObject.NotificationType;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class NotificationValidatorType implements IValidator<String> {
 
     @Override

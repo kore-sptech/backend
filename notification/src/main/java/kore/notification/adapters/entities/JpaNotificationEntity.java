@@ -38,7 +38,7 @@ public class JpaNotificationEntity {
     @Column(nullable = false)
     private String message;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_read")
     private boolean read = false;
 
     @Column(nullable = false)

@@ -1,5 +1,8 @@
 package kore.notification.utils;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class NotificationValidatorMessage implements IValidator<String> {
 
     @Override

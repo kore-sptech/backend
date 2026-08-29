@@ -80,6 +80,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
+
     volumes:
       - ./notification:/app:z
       - /app/target
@@ -96,8 +97,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+      RABBITMQ_DEFAULT_USER: kore
+      RABBITMQ_DEFAULT_PASS: kore
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
