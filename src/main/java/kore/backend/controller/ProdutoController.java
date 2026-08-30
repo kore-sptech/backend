@@ -31,22 +31,27 @@ public class ProdutoController {
             @ApiResponse(responseCode = "201", description = "Produto cadastrado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
-    @PostMapping
-    public ResponseEntity<Produto> cadastrar(@Valid @RequestBody ProdutoDTO produtoDTO) {
-        Produto p = produtoService.salvarProduto(produtoDTO);
+    @PostMapping("/{fkUsuario}")
+    public ResponseEntity<Produto> cadastrar(
+            @Valid @RequestBody ProdutoDTO produtoDTO,
+            @PathVariable Long fkUsuario) {
+        Produto p = produtoService.salvarProduto(produtoDTO, fkUsuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(p);
     }
 
-    @Operation(summary = "Listagem de produtos", description = "Lista todos os produto")
+    @Operation(summary = "Listagem de produtos", description = "Lista todos os produtos do usuário")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Produtos listados com sucesso"),
             @ApiResponse(responseCode = "204", description = "Sem produtos cadastrados para listar"),
             @ApiResponse(responseCode = "503", description = "Erro ao acessar o banco")
     })
-    @GetMapping
-    public ResponseEntity<List<Produto>> listrarProdutos() {
+    @GetMapping("/{fkUsuario}")
+    public ResponseEntity<List<Produto>> listrarProdutos(
+            @PathVariable Long fkUsuario
+    ) {
         try {
-            List<Produto> p = produtoService.listarTodosProdutos();
+            // O serviço precisará ser atualizado para receber o fkUsuario
+            List<Produto> p = produtoService.listarTodosProdutos(fkUsuario);
             if (p.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
@@ -58,21 +63,22 @@ public class ProdutoController {
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
     }
 
-    @Operation(summary = "Atualização de produto", description = "Atualiza o produto")
+    @Operation(summary = "Atualização de produto", description = "Atualiza o produto do usuário")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "503", description = "Erro ao acessar o banco")
     })
-    @PutMapping("/{id}")
+    @PutMapping("/{fkUsuario}/{id}")
     public ResponseEntity<Produto> atualizarProduto(
+            @PathVariable Long fkUsuario,
             @PathVariable Long id,
             @Valid @RequestBody ProdutoDTO produtoDTO) {
         try {
-            Produto p = produtoService.atualizarProduto(id, produtoDTO);
+            // O serviço precisará ser atualizado para validar/receber o fkUsuario
+            Produto p = produtoService.atualizarProduto(fkUsuario, id, produtoDTO);
             return ResponseEntity.ok(p);
         } catch (Exception e) {
             if (e instanceof DataAccessException)
@@ -81,15 +87,18 @@ public class ProdutoController {
         }
     }
 
-    @Operation(summary = "Remoção de produto", description = "Remove o produto")
+    @Operation(summary = "Remoção de produto", description = "Remove o produto do usuário")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Produto removido com sucesso"),
             @ApiResponse(responseCode = "503", description = "Erro ao acessar o banco")
     })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarProduto(@PathVariable Long id) {
+    @DeleteMapping("/{fkUsuario}/{id}")
+    public ResponseEntity<Void> deletarProduto(
+            @PathVariable Long fkUsuario,
+            @PathVariable Long id) {
         try {
-            produtoService.deletarProduto(id);
+            // O serviço precisará ser atualizado para validar/receber o fkUsuario
+            produtoService.deletarProduto(fkUsuario, id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             if (e instanceof DataAccessException)
