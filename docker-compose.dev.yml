@@ -96,11 +96,6 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: kore
-      RABBITMQ_DEFAULT_PASS: kore
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "status"]
       interval: 10s
@@ -111,4 +106,3 @@ services:
 volumes:
   MYSQL_DATA_DEV:
   maven_repo:
-  rabbitmq_data:
