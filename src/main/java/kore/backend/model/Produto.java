@@ -67,6 +67,17 @@ public class Produto {
         this.tipo = tipo;
     }
 
+    public void atualizarProduto(
+            String descricao,
+            String nome,
+            Integer qtdMinAlerta,
+            String tipo
+    ){
+        this.descricao = descricao;
+        this.nome = nome;
+        this.qtdMinAlerta = qtdMinAlerta;
+        this.tipo = tipo;
+    }
     public void adicionarEstoque(List<Item> itens){
         itens.forEach(item -> itens.add(item));
     }
