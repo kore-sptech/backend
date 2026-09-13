@@ -43,8 +43,7 @@ public class S3StorageService {
 
         s3Client.putObject(
                 request,
-                RequestBody.fromBytes(file.getBytes())
-        );
+                RequestBody.fromBytes(file.getBytes()));
 
         return buildPublicUrl(objectKey);
     }
@@ -60,13 +59,27 @@ public class S3StorageService {
                 .build());
     }
 
+    public String generateObjectKey(String originalFilename) {
+        String sanitizedFilename = originalFilename == null || originalFilename.isBlank()
+                ? "foto"
+                : Paths.get(originalFilename)
+                        .getFileName()
+                        .toString()
+                        .replaceAll("[\\\\/]+", "_");
+
+        return "fotos/"
+                + UUID.randomUUID()
+                + "-"
+                + sanitizedFilename;
+    }
+
     public String generateObjectKey(Long produtoId, String originalFilename) {
         String sanitizedFilename = originalFilename == null || originalFilename.isBlank()
                 ? "foto"
                 : Paths.get(originalFilename)
-                .getFileName()
-                .toString()
-                .replaceAll("[\\\\/]+", "_");
+                        .getFileName()
+                        .toString()
+                        .replaceAll("[\\\\/]+", "_");
 
         return "produtos/"
                 + produtoId
@@ -89,16 +102,14 @@ public class S3StorageService {
                         && !contentType.equals("image/webp"))) {
 
             throw new IllegalArgumentException(
-                    "Formato inválido. Utilize JPG, PNG ou WEBP."
-            );
+                    "Formato inválido. Utilize JPG, PNG ou WEBP.");
         }
 
         long maxSize = 5 * 1024 * 1024;
 
         if (file.getSize() > maxSize) {
             throw new IllegalArgumentException(
-                    "A imagem deve possuir no máximo 5 MB"
-            );
+                    "A imagem deve possuir no máximo 5 MB");
         }
     }
 
