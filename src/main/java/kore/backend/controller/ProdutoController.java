@@ -12,6 +12,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -96,5 +97,21 @@ public class ProdutoController {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @Operation(summary = "Upload de imagem do produto", description = "Adiciona ou substitui a imagem do produto"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Imagem enviada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Imagem inválida"),
+            @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @PostMapping(value = "/{id}/imagem", consumes = "multipart/form-data")
+    public ResponseEntity<Produto> adicionarImagem(
+            @PathVariable Long id,
+            @RequestParam("imagem") MultipartFile imagem
+    ) {
+        Produto produto = produtoService.salvarImagem(id, imagem);
+        return ResponseEntity.ok(produto);
     }
 }

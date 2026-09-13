@@ -32,13 +32,19 @@ public class S3StorageService {
     }
 
     public String upload(String objectKey, MultipartFile file) throws IOException {
+
+        validateImage(file);
+
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(objectKey)
                 .contentType(file.getContentType())
                 .build();
 
-        s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
+        s3Client.putObject(
+                request,
+                RequestBody.fromBytes(file.getBytes())
+        );
 
         return buildPublicUrl(objectKey);
     }
@@ -54,12 +60,46 @@ public class S3StorageService {
                 .build());
     }
 
-    public String generateObjectKey(String originalFilename) {
+    public String generateObjectKey(Long produtoId, String originalFilename) {
         String sanitizedFilename = originalFilename == null || originalFilename.isBlank()
                 ? "foto"
-                : Paths.get(originalFilename).getFileName().toString().replaceAll("[\\\\/]+", "_");
+                : Paths.get(originalFilename)
+                .getFileName()
+                .toString()
+                .replaceAll("[\\\\/]+", "_");
 
-        return "fotos/" + UUID.randomUUID() + "-" + sanitizedFilename;
+        return "produtos/"
+                + produtoId
+                + "/"
+                + UUID.randomUUID()
+                + "-"
+                + sanitizedFilename;
+    }
+
+    public void validateImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Imagem vazia");
+        }
+
+        String contentType = file.getContentType();
+
+        if (contentType == null ||
+                (!contentType.equals("image/jpeg")
+                        && !contentType.equals("image/png")
+                        && !contentType.equals("image/webp"))) {
+
+            throw new IllegalArgumentException(
+                    "Formato inválido. Utilize JPG, PNG ou WEBP."
+            );
+        }
+
+        long maxSize = 5 * 1024 * 1024;
+
+        if (file.getSize() > maxSize) {
+            throw new IllegalArgumentException(
+                    "A imagem deve possuir no máximo 5 MB"
+            );
+        }
     }
 
     public String buildPublicUrl(String objectKey) {

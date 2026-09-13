@@ -37,6 +37,9 @@ public class Produto {
     @Column(name = "tipo", nullable = false)
     private String tipo;
 
+    @Column(name = "imagem_key")
+    private String imagemKey;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties("produtos")
     @JoinColumn(name = "fk_categoria")
