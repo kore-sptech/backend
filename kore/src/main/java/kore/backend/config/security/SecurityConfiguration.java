@@ -11,7 +11,6 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,7 +39,9 @@ public class SecurityConfiguration {
             "/swagger-ui.html",
             "/sse/stream",
             "/auth/**",
-            "/error"
+            "/error",
+            "/test",
+            "/test/**"
     };
 
     @Bean
@@ -63,11 +64,13 @@ public class SecurityConfiguration {
                 .addFilterBefore(securityFilter, AnonymousAuthenticationFilter.class)
                 .build();
     }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList("*")); // Se quiser restringir depois, troque "*" por "http://localhost:3000" (ou a porta do seu front)
+        configuration.setAllowedOrigins(Arrays.asList("*")); // Se quiser restringir depois, troque "*" por
+                                                             // "http://localhost:3000" (ou a porta do seu front)
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
 
@@ -75,6 +78,7 @@ public class SecurityConfiguration {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(authService);
