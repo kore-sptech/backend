@@ -1,12 +1,13 @@
 package kore.backend.service;
 
-import kore.backend.exception.CredencialExistenteException;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.UsuarioDTO;
 import kore.backend.model.Usuario;
 import kore.backend.repository.UsuarioRepository;
+import kore.backend.service.policy.UsuarioPolicy;
+import kore.backend.service.validation.UsuarioValidationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,17 +16,20 @@ import java.util.List;
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UsuarioValidationService usuarioValidationService;
+    private final UsuarioPolicy usuarioPolicy;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+                         UsuarioValidationService usuarioValidationService, UsuarioPolicy usuarioPolicy) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.usuarioValidationService = usuarioValidationService;
+        this.usuarioPolicy = usuarioPolicy;
     }
 
     @Transactional
     public Usuario salvar(UsuarioDTO usuarioDTO) {
-        if (usuarioRepository.findByEmail(usuarioDTO.email()).isPresent()) {
-            throw new CredencialExistenteException("E-mail já cadastrado.", usuarioDTO.email());
-        }
+        usuarioPolicy.validarCadastro(usuarioDTO);
 
         Usuario p = new Usuario();
         p.setEmail(usuarioDTO.email());
@@ -36,22 +40,13 @@ public class UsuarioService {
     }
 
     public Usuario buscar(Long id) {
-        return usuarioRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado", id));
+        return usuarioValidationService.buscarOuLancar(id);
     }
 
     @Transactional
     public Usuario atualizar(UsuarioDTO usuarioDTO, Long id) {
-
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado", id));
-
-        usuarioRepository.findByEmail(usuarioDTO.email())
-                .ifPresent(usuarioExistente -> {
-                    if (!usuarioExistente.getId().equals(id)) {
-                        throw new CredencialExistenteException("E-mail já cadastrado.", usuarioDTO.email());
-                    }
-                });
+        Usuario usuario = usuarioValidationService.buscarOuLancar(id);
+        usuarioPolicy.validarAtualizacao(usuarioDTO, id);
 
         usuario.setEmail(usuarioDTO.email());
         usuario.setSenha(passwordEncoder.encode(usuarioDTO.senha()));
@@ -62,9 +57,7 @@ public class UsuarioService {
 
     @Transactional
     public void deletar(Long id) {
-        if (!usuarioRepository.existsById(id)) {
-            throw new RecursoNaoEncontradoException("Usuário não encontrado", id);
-        }
+        usuarioPolicy.validarExistencia(id);
         usuarioRepository.deleteById(id);
     }
 
@@ -73,13 +66,6 @@ public class UsuarioService {
     }
 
     public Usuario login(String email, String senha) {
-        Usuario usuario = this.usuarioRepository.findByEmail(email).orElseThrow(
-                () -> new RecursoNaoEncontradoException("Usuário não encontrado", 1L));
-
-        if (!usuario.getSenha().equals(senha)) {
-            throw new RecursoNaoEncontradoException("Senha incorreta", 1L);
-        }
-
-        return usuario;
+        return usuarioPolicy.validarLogin(email, senha);
     }
 }

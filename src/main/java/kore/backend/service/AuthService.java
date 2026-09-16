@@ -1,7 +1,6 @@
 package kore.backend.service;
 
 import kore.backend.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -10,25 +9,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService implements UserDetailsService {
 
-    @Autowired
-    UsuarioRepository repository;
+    private final UsuarioRepository repository;
 
-    // @Override
-    // public UserDetails loadUserByUsername(String email) throws
-    // UsernameNotFoundException {
-    // Usuario usuario = repository.findByEmail(email)
-    // .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
-    //
-    // return org.springframework.security.core.userdetails.User
-    // .withUsername(usuario.getEmail())
-    // .password(usuario.getSenha())
-    // .authorities(Collections.emptyList()) // sem roles
-    // .build();
-    // }
+    public AuthService(UsuarioRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return repository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado" + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + email));
     }
 }

@@ -55,8 +55,6 @@ public class TransacaoController {
     public ResponseEntity<Transacao> criarTransacao(
             @RequestBody TransacaoDTO transacaoDTO,
             @AuthenticationPrincipal Usuario usuario) {
-        System.out.println(transacaoDTO);
-
         Transacao transacao = this.transacaoService.criarTransacao(transacaoDTO, usuario);
 
         return ResponseEntity.ok(transacao);
@@ -76,8 +74,6 @@ public class TransacaoController {
     public ResponseEntity<MetricasDTO> calcularMetricas(
             @AuthenticationPrincipal Usuario usuario) {
         MetricasDTO metricas = this.transacaoService.calcularMetricas(usuario);
-
-        System.out.println(metricas);
         return ResponseEntity.ok(metricas);
     }
 

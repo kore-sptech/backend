@@ -1,38 +1,35 @@
-package kore.backend.service.rules;
+package kore.backend.service.validation;
 
-import jakarta.persistence.EntityExistsException;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.model.Categoria;
 import kore.backend.repository.CategoriaRepository;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 
-@Component
-public class CategoriaExisteValidacao implements CategoriaValidacao{
+@Service
+public class DefaultCategoriaValidationService implements CategoriaValidationService {
     private final CategoriaRepository categoriaRepository;
 
-    public CategoriaExisteValidacao(CategoriaRepository categoriaRepository) {
+    public DefaultCategoriaValidationService(CategoriaRepository categoriaRepository) {
         this.categoriaRepository = categoriaRepository;
     }
 
-
     @Override
     public Categoria obterCategoria(Long idCategoria) {
-        return categoriaRepository.findById(idCategoria).orElseThrow(
-                () -> new EntityExistsException("Categoria não existe. Id da categoria: " +idCategoria)
-        );
-    }
-
-    @Override
-    public Categoria obterCategoriaDoUsuario(Long idCategoria, Long fkUsuario) {
-        return (Categoria) categoriaRepository.buscarCategoriaPorIdDaCategoriaEDoUsuario(fkUsuario, idCategoria)
+        return categoriaRepository.findById(idCategoria)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Categoria não encontrada", idCategoria));
     }
 
     @Override
-    public List<Categoria> obterCategoriaPorIdDoUsuario(Long fkUsuario) {
+    public Categoria obterCategoriaDoUsuario(Long idCategoria, Long fkUsuario) {
+        return categoriaRepository.buscarCategoriaPorIdDaCategoriaEDoUsuario(fkUsuario, idCategoria)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Categoria não encontrada", idCategoria));
+    }
+
+    @Override
+    public List<Categoria> obterCategoriasPorIdDoUsuario(Long fkUsuario) {
         return categoriaRepository.buscarPorIdDoUsuario(fkUsuario)
                 .orElse(Collections.emptyList());
     }

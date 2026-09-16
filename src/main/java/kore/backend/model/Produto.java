@@ -2,7 +2,6 @@ package kore.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import kore.backend.dto.produto.ProdutoDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -44,15 +43,6 @@ public class Produto {
 
     @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Item> itens = new ArrayList<>();
-    public Produto(ProdutoDTO produtoDTO) {
-        this.qtdMinAlerta = produtoDTO.qtdMinAlerta();
-        this.nome = produtoDTO.nome();
-        this.descricao = produtoDTO.descricao();
-        this.possuiValidade = produtoDTO.possuiValidade();
-        this.fkUsuario = produtoDTO.usuario();
-        this.tipo = produtoDTO.tipo();
-        this.fkUsuario = produtoDTO.categoriaId();
-    }
 
     public Produto() {
     }

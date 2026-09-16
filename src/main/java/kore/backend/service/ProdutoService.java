@@ -3,14 +3,12 @@ package kore.backend.service;
 import jakarta.persistence.EntityExistsException;
 import jakarta.transaction.Transactional;
 import kore.backend.dto.produto.ProdutoDTO;
-import kore.backend.exception.RecursoNaoEncontradoException;
+import kore.backend.mapper.ProdutoMapper;
 import kore.backend.model.Produto;
-import kore.backend.repository.CategoriaRepository;
 import kore.backend.repository.ProdutoRepository;
-import kore.backend.repository.UsuarioRepository;
-import kore.backend.service.rules.CategoriaExisteValidacao;
-import kore.backend.service.rules.ProdutoBuscaValidacao;
-import kore.backend.service.rules.UsuarioExisteValidacao;
+import kore.backend.service.policy.ProdutoPolicy;
+import kore.backend.service.validation.CategoriaValidationService;
+import kore.backend.service.validation.ProdutoValidationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,35 +16,37 @@ import java.util.List;
 @Service
 public class ProdutoService {
     private final ProdutoRepository produtoRepository;
-    private final CategoriaExisteValidacao categoriaExisteValidacao;
-    private final UsuarioExisteValidacao usuarioExisteValidacao;
-    private final ProdutoBuscaValidacao produtoBuscaValidacao;
+    private final CategoriaValidationService categoriaValidationService;
+    private final ProdutoValidationService produtoValidationService;
+    private final ProdutoPolicy produtoPolicy;
 
-    public ProdutoService(ProdutoRepository produtoRepository, CategoriaExisteValidacao categoriaExisteValidacao, UsuarioExisteValidacao usuarioExisteValidacao, ProdutoBuscaValidacao produtoBuscaValidacao) {
+    public ProdutoService(ProdutoRepository produtoRepository,
+                          CategoriaValidationService categoriaValidationService,
+                          ProdutoValidationService produtoValidationService,
+                          ProdutoPolicy produtoPolicy) {
         this.produtoRepository = produtoRepository;
-        this.categoriaExisteValidacao = categoriaExisteValidacao;
-        this.usuarioExisteValidacao = usuarioExisteValidacao;
-        this.produtoBuscaValidacao = produtoBuscaValidacao;
+        this.categoriaValidationService = categoriaValidationService;
+        this.produtoValidationService = produtoValidationService;
+        this.produtoPolicy = produtoPolicy;
     }
 
     @Transactional
     public Produto salvarProduto(ProdutoDTO produtoDTO, Long fkUsuario) {
-        usuarioExisteValidacao.validar(fkUsuario);
-        Produto p = new Produto(produtoDTO);
-        p.setCategoria(categoriaExisteValidacao.obterCategoria(produtoDTO.categoriaId()));
+        produtoPolicy.validarCadastro(produtoDTO, fkUsuario);
+        Produto p = ProdutoMapper.fromDto(produtoDTO);
+        p.setCategoria(categoriaValidationService.obterCategoria(produtoDTO.categoriaId()));
         p.setFkUsuario(fkUsuario);
         return produtoRepository.save(p);
     }
 
     public List<Produto> listarTodosProdutos(Long fkUsuario) {
-        usuarioExisteValidacao.validar(fkUsuario);
-        // Exige um novo método no ProdutoRepository
+        produtoPolicy.validarUsuario(fkUsuario);
         return produtoRepository.findAllByFkUsuario(fkUsuario);
     }
 
     @Transactional
     public Produto atualizarProduto(Long fkUsuario, Long id, ProdutoDTO produtoDTO) {
-        Produto p = produtoBuscaValidacao.validarEBuscar(id, fkUsuario);
+        Produto p = produtoPolicy.validarProdutoDoUsuario(id, fkUsuario);
         p.atualizarProduto(
                 produtoDTO.descricao(),
                 produtoDTO.nome(),
@@ -58,7 +58,7 @@ public class ProdutoService {
 
     @Transactional
     public void deletarProduto(Long fkUsuario, Long id) {
-        Produto p = produtoBuscaValidacao.validarEBuscar(id, fkUsuario);
+        Produto p = produtoPolicy.validarProdutoDoUsuario(id, fkUsuario);
         produtoRepository.delete(p);
     }
 }
