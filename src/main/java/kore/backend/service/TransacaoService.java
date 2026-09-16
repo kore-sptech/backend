@@ -19,50 +19,45 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kore.backend.dto.MetricasDTO;
 import kore.backend.dto.TransacaoDTO;
+import kore.backend.mapper.TransacaoMapper;
 import kore.backend.model.Transacao;
 import kore.backend.model.Usuario;
 import kore.backend.model.enums.CategoriaTransacao;
 import kore.backend.model.enums.StatusAgendamento;
 import kore.backend.model.enums.TipoTransacao;
 import kore.backend.repository.TransacaoRepository;
+import kore.backend.service.validation.TransacaoValidationService;
 
 @Service
 public class TransacaoService {
 
         private final TransacaoRepository transacaoRepository;
         private final AgendamentoRepository agendamentoRepository;
-        private final AgendamentoService agendamentoService;
+        private final TransacaoValidationService transacaoValidationService;
 
         public TransacaoService(TransacaoRepository transacaoRepository, AgendamentoRepository agendamentoRepository,
-                        AgendamentoService agendamentoService) {
+                        TransacaoValidationService transacaoValidationService) {
                 this.transacaoRepository = transacaoRepository;
                 this.agendamentoRepository = agendamentoRepository;
-                this.agendamentoService = agendamentoService;
+                this.transacaoValidationService = transacaoValidationService;
         }
 
         @Transactional
         public Transacao criarTransacao(TransacaoDTO transacaoDTO, Usuario usuario) {
-                Transacao transacao = new Transacao(transacaoDTO);
-
-                if (transacao.getValor() <= 0) {
-                        throw new IllegalArgumentException("Valor da transação deve ser maior que zero");
-                }
-
+                Transacao transacao = TransacaoMapper.fromDto(transacaoDTO);
+                validarValorTransacao(transacao);
                 transacao.setUsuario(usuario);
                 return transacaoRepository.save(transacao);
         }
 
         @Transactional
         public Transacao criarTransacao(TransacaoDTO transacaoDTO, Usuario usuario, Long agendamentoId) {
-                Transacao transacao = new Transacao(transacaoDTO);
+                Transacao transacao = TransacaoMapper.fromDto(transacaoDTO);
 
                 Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
                                 .orElseThrow(AgendamentoNaoEncondradoException::new);
 
-                if (transacao.getValor() <= 0) {
-                        throw new IllegalArgumentException("Valor da transação deve ser maior que zero");
-                }
-
+                validarValorTransacao(transacao);
                 transacao.setUsuario(usuario);
                 transacao.setSessao(agendamento);
 
@@ -120,8 +115,6 @@ public class TransacaoService {
                                 .mapToDouble(a -> a.getPreco() != null ? a.getPreco() : 0.0)
                                 .sum();
 
-                System.out.println(faturamentoDeAgendamentos);
-
                 Double faturamentoBruto = faturamentoDeAgendamentos;
 
                 // ── Previsão do próximo mês via agendamentos ─────────────────────────────
@@ -160,6 +153,10 @@ public class TransacaoService {
                                 previsaoProximoMes,
                                 variacaoReceita,
                                 mesPassado);
+        }
+
+        private void validarValorTransacao(Transacao transacao) {
+                transacaoValidationService.validarValor(transacao);
         }
 
         private Double calcularVariacao(Double valorAtual, Double valorAnterior) {

@@ -2,7 +2,6 @@ package kore.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import kore.backend.dto.ItemDTO;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -45,12 +44,5 @@ public class Item {
 
 
     public Item() {
-    }
-
-    public Item(ItemDTO itemDTO) {
-        this.dataEntrada = itemDTO.dataEntrada();
-        this.dataValidade = itemDTO.dataValidade();
-        this.seAtivo = itemDTO.seAtivo();
-        this.valorUnitario = itemDTO.valorUnitario();
     }
 }

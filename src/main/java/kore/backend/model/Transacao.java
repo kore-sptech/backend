@@ -8,7 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import kore.backend.dto.TransacaoDTO;
 import kore.backend.model.enums.CategoriaTransacao;
 import kore.backend.model.enums.TipoTransacao;
 import lombok.AllArgsConstructor;
@@ -49,13 +48,6 @@ public class Transacao {
     @OneToOne
     @JoinColumn(name = "sessao_id")
     private Agendamento sessao;
-
-    public Transacao(TransacaoDTO transacaoDTO) {
-        this.valor = transacaoDTO.valor();
-        this.nome = transacaoDTO.nome();
-        this.tipo = transacaoDTO.tipo();
-        this.categoria = transacaoDTO.categoria();
-    }
 
     @Override
     public String toString() {

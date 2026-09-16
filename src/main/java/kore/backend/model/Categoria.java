@@ -26,4 +26,16 @@ public class Categoria {
     @OneToMany(mappedBy = "categoria")
     private List<Produto> produtos = new ArrayList<>();
 
+    public Categoria() {
+    }
+
+    public Categoria(String nome, String descricao, Long fkUsuario) {
+        this.nome = nome;
+        this.descricao = descricao;
+        this.fkUsuario = fkUsuario;
+    }
+    public void atualizar(String nome, String descricao){
+        this.nome = nome;
+        this.descricao = descricao;
+    }
 }

@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import kore.backend.config.security.TokenService;
 import kore.backend.dto.LoginDTO;
 import kore.backend.dto.LoginResponseDTO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,11 +21,13 @@ import kore.backend.model.Usuario;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final TokenService tokenService;
 
-    @Autowired
-    private TokenService tokenService;
+    public AuthController(AuthenticationManager authenticationManager, TokenService tokenService) {
+        this.authenticationManager = authenticationManager;
+        this.tokenService = tokenService;
+    }
 
     @PostMapping("/login")
     @SecurityRequirements

@@ -2,7 +2,6 @@ package kore.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.model.enums.FormaPagamento;
 import kore.backend.model.enums.StatusAgendamento;
 import lombok.AllArgsConstructor;
@@ -58,14 +57,5 @@ public class Agendamento {
     @OneToOne(mappedBy = "sessao", cascade = CascadeType.ALL)
     @JsonIgnore
     private Transacao transacao;
-
-    public void put(AgendamentoRequestDTO agendamento) {
-        this.preco = agendamento.getPreco();
-        this.cliente = agendamento.getCliente();
-        this.telefone = agendamento.getTelefone();
-        this.formaPagamento = agendamento.getFormaPagamento();
-        this.inicio = agendamento.getInicio();
-        this.fim = agendamento.getFim();
-    }
 
 }

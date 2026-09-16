@@ -9,28 +9,25 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Service
 public class TokenService {
+    private static final String ISSUER = "auth-api";
+    private static final int ONE_HOUR_IN_SECONDS = 60 * 60;
+
     @Value("${api.security.token.secret}")
     private String secret;
 
     public String generateToken(Usuario usuario) {
         try {
-
-            Integer ONE_HOUR_IN_SECONDS = 60 * 60;
-
             Algorithm algorithm = Algorithm.HMAC256(secret);
-            String token = JWT.create()
-                    .withIssuer("auth-api")
+            return JWT.create()
+                    .withIssuer(ISSUER)
                     .withSubject(usuario.getEmail())
-                    .withExpiresAt(java.util.Date.from(java.time.Instant.now().plusSeconds(ONE_HOUR_IN_SECONDS)))
+                    .withExpiresAt(java.util.Date.from(Instant.now().plusSeconds(ONE_HOUR_IN_SECONDS)))
                     .sign(algorithm);
-            return token;
         } catch (JWTCreationException exception) {
-            throw new RuntimeException("Erro ao gerar token JWT", exception);
+            throw new IllegalStateException("Erro ao gerar token JWT", exception);
         }
     }
 
@@ -38,16 +35,12 @@ public class TokenService {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             return JWT.require(algorithm)
-                    .withIssuer("auth-api")
+                    .withIssuer(ISSUER)
                     .build()
                     .verify(token)
                     .getSubject();
         } catch (JWTVerificationException e) {
             return null;
         }
-    }
-
-    private Instant genExpirationDate() {
-        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
 }

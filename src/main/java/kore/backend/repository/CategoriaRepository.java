@@ -12,8 +12,8 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     @Query(value = "SELECT * FROM categoria WHERE fk_usuario = :fk_usuario", nativeQuery = true)
     Optional<List<Categoria>> buscarPorIdDoUsuario(@Param("fk_usuario") Long id);
 
-    @Query(value = "SELECT * FROM categoria WHERE fk_usuario = :fk_usuario AND id_categoria = :id_categoria", nativeQuery = true)
-    Optional<List<Categoria>> buscarCategoriaPorIdDaCategoriaEDoUsuario(
+    @Query(value = "SELECT * FROM categoria WHERE fk_usuario = :fk_usuario AND id_categoria = :id_categoria LIMIT 1", nativeQuery = true)
+    Optional<Categoria> buscarCategoriaPorIdDaCategoriaEDoUsuario(
             @Param("fk_usuario") Long fkUsuario,
             @Param("id_categoria") Long idCategoria);
 }

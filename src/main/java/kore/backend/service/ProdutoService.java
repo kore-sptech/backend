@@ -4,10 +4,12 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.transaction.Transactional;
 import kore.backend.dto.produto.ProdutoDTO;
 import kore.backend.exception.RecursoNaoEncontradoException;
+import kore.backend.mapper.ProdutoMapper;
 import kore.backend.model.Produto;
-import kore.backend.repository.CategoriaRepository;
 import kore.backend.repository.ProdutoRepository;
-import kore.backend.repository.UsuarioRepository;
+import kore.backend.service.policy.ProdutoPolicy;
+import kore.backend.service.validation.CategoriaValidationService;
+import kore.backend.service.validation.ProdutoValidationService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -17,31 +19,34 @@ import java.util.List;
 @Service
 public class ProdutoService {
     private final ProdutoRepository produtoRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final CategoriaRepository categoriaRepository;
+    private final CategoriaValidationService categoriaValidationService;
+    private final ProdutoValidationService produtoValidationService;
+    private final ProdutoPolicy produtoPolicy;
     private final S3StorageService s3StorageService;
 
-    public ProdutoService(ProdutoRepository produtoRepository, UsuarioRepository usuarioRepository, CategoriaRepository categoriaRepository, S3StorageService s3StorageService) {
+    public ProdutoService(ProdutoRepository produtoRepository,
+            CategoriaValidationService categoriaValidationService,
+            ProdutoValidationService produtoValidationService,
+            ProdutoPolicy produtoPolicy,
+            S3StorageService s3StorageService
+        ) {
         this.produtoRepository = produtoRepository;
-        this.usuarioRepository = usuarioRepository;
-        this.categoriaRepository = categoriaRepository;
+        this.categoriaValidationService = categoriaValidationService;
+        this.produtoValidationService = produtoValidationService;
+        this.produtoPolicy = produtoPolicy;
         this.s3StorageService = s3StorageService;
     }
 
     @Transactional
-    public Produto salvarProduto(ProdutoDTO produtoDTO) {
-        if(usuarioRepository.existsById(produtoDTO.usuario())){
-            Produto p = new Produto(produtoDTO);
-            if (categoriaRepository.existsById(produtoDTO.categoriaId())){
-                p.setCategoria(categoriaRepository.findById(produtoDTO.categoriaId())
-                        .orElseThrow(() -> new EntityExistsException("Id da categoria não existe"))
-                );
-            }
-            return produtoRepository.save(p);
-        }
-        throw new RecursoNaoEncontradoException("Usuario nao encontrado", produtoDTO.usuario());
+    public Produto salvarProduto(ProdutoDTO produtoDTO, Long fkUsuario) {
+        produtoPolicy.validarCadastro(produtoDTO, fkUsuario);
+        Produto p = ProdutoMapper.fromDto(produtoDTO);
+        p.setCategoria(categoriaValidationService.obterCategoria(produtoDTO.categoriaId()));
+        p.setFkUsuario(fkUsuario);
+        return produtoRepository.save(p);
     }
 
+    
     @Transactional
     public Produto salvarImagem(Long produtoId, MultipartFile arquivo) {
 
@@ -82,27 +87,27 @@ public class ProdutoService {
         }
     }
 
-    public List<Produto> listarTodosProdutos() {
-        return produtoRepository.findAll();
+
+    public List<Produto> listarTodosProdutos(Long fkUsuario) {
+        produtoPolicy.validarUsuario(fkUsuario);
+        return produtoRepository.findAllByFkUsuario(fkUsuario);
     }
 
     @Transactional
-    public Produto atualizarProduto(Long id, ProdutoDTO produtoDTO) {
-        Produto p = produtoRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto nao encontrado", id));
-        p.setDescricao(produtoDTO.descricao());
-        p.setNome(produtoDTO.nome());
-        p.setQtdMinAlerta(produtoDTO.qtdMinAlerta());
-        p.setTipo(produtoDTO.tipo());
+    public Produto atualizarProduto(Long fkUsuario, Long id, ProdutoDTO produtoDTO) {
+        Produto p = produtoPolicy.validarProdutoDoUsuario(id, fkUsuario);
+        p.atualizarProduto(
+                produtoDTO.descricao(),
+                produtoDTO.nome(),
+                produtoDTO.qtdMinAlerta(),
+                produtoDTO.tipo());
         return produtoRepository.save(p);
     }
 
     @Transactional
-    public void deletarProduto(Long id) {
-        if (!produtoRepository.existsById(id)) {
-            throw new RecursoNaoEncontradoException("Usuário não encontrado", id);
-        }
-        produtoRepository.deleteById(id);
+    public void deletarProduto(Long fkUsuario, Long id) {
+        Produto p = produtoPolicy.validarProdutoDoUsuario(id, fkUsuario);
+        produtoRepository.delete(p);
     }
 }
 
