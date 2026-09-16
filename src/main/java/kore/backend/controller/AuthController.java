@@ -37,7 +37,7 @@ public class AuthController {
             var auth = this.authenticationManager.authenticate(usernamePassword);
             Usuario usuario = (Usuario) auth.getPrincipal();
             var token = tokenService.generateToken(usuario);
-            return ResponseEntity.ok(new LoginResponseDTO(token, usuario.getNome()));
+            return ResponseEntity.ok(new LoginResponseDTO(usuario.getId(), token, usuario.getNome()));
         } catch (org.springframework.security.core.AuthenticationException e) {
             return ResponseEntity.status(401).body("Email ou senha inválidos");
         }

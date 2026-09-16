@@ -45,7 +45,7 @@ ENTRYPOINT ["/usr/local/bin/dev-entrypoint.sh"]
 FROM base AS build
 WORKDIR /app
 COPY . .
-RUN mvn -B -o clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
 ##########################################################################
 # STAGE: prod -> imagem enxuta, só com JRE + jar, sem Maven/toolchain

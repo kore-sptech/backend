@@ -12,13 +12,14 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "Produto")
+@Table(name = "produto")
 public class Produto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idProduto")
     private Long id;
+
     @Column(name = "nome")
     private String nome;
 
@@ -42,22 +43,34 @@ public class Produto {
     @JoinColumn(name = "fk_categoria")
     private Categoria categoria;
 
-    @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "produto",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private List<Item> itens = new ArrayList<>();
-    public Produto(ProdutoDTO produtoDTO) {
+
+    public Produto(ProdutoDTO produtoDTO, Long fkUsuario) {
         this.qtdMinAlerta = produtoDTO.qtdMinAlerta();
         this.nome = produtoDTO.nome();
         this.descricao = produtoDTO.descricao();
         this.possuiValidade = produtoDTO.possuiValidade();
-        this.fkUsuario = produtoDTO.usuario();
         this.tipo = produtoDTO.tipo();
-        this.fkUsuario = produtoDTO.categoriaId();
+        this.fkUsuario = fkUsuario;
     }
 
     public Produto() {
     }
 
-    public Produto(Long id, String nome, String descricao, Boolean possuiValidade, Integer qtdMinAlerta, Long fkUsuario, String tipo) {
+    public Produto(
+            Long id,
+            String nome,
+            String descricao,
+            Boolean possuiValidade,
+            Integer qtdMinAlerta,
+            Long fkUsuario,
+            String tipo
+    ) {
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;
@@ -65,9 +78,5 @@ public class Produto {
         this.qtdMinAlerta = qtdMinAlerta;
         this.fkUsuario = fkUsuario;
         this.tipo = tipo;
-    }
-
-    public void adicionarEstoque(List<Item> itens){
-        itens.forEach(item -> itens.add(item));
     }
 }

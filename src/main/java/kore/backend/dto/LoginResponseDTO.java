@@ -1,4 +1,4 @@
 package kore.backend.dto;
 
-public record LoginResponseDTO(String token, String nome) {
+public record LoginResponseDTO(Long id, String token, String nome) {
 }

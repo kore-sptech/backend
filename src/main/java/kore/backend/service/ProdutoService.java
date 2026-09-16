@@ -4,6 +4,7 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.transaction.Transactional;
 import kore.backend.dto.produto.ProdutoDTO;
 import kore.backend.exception.RecursoNaoEncontradoException;
+import kore.backend.model.Categoria;
 import kore.backend.model.Produto;
 import kore.backend.repository.CategoriaRepository;
 import kore.backend.repository.ProdutoRepository;
@@ -26,17 +27,30 @@ public class ProdutoService {
 
     @Transactional
     public Produto salvarProduto(ProdutoDTO produtoDTO, Long fkUsuario) {
-        // Ajustado para validar o fkUsuario da rota em vez do DTO
-        if(usuarioRepository.existsById(fkUsuario)){
-            Produto p = new Produto(produtoDTO);
-            p.setCategoria(categoriaRepository.findById(produtoDTO.categoriaId())
-                    .orElseThrow(() -> new EntityExistsException("Id da categoria não existe"))
-            );
-            p.setFkUsuario(fkUsuario); // Como já validamos que existe, podemos setar direto
 
-            return produtoRepository.save(p);
+        if (!usuarioRepository.existsById(fkUsuario)) {
+            throw new RecursoNaoEncontradoException(
+                    "Usuario nao encontrado",
+                    fkUsuario
+            );
         }
-        throw new RecursoNaoEncontradoException("Usuario nao encontrado", fkUsuario);
+
+        Produto produto = new Produto(produtoDTO, fkUsuario);
+
+        if (produtoDTO.categoriaId() != null) {
+            Categoria categoria = categoriaRepository
+                    .findById(produtoDTO.categoriaId())
+                    .orElseThrow(() ->
+                            new RecursoNaoEncontradoException(
+                                    "Categoria nao encontrada",
+                                    produtoDTO.categoriaId()
+                            )
+                    );
+
+            produto.setCategoria(categoria);
+        }
+
+        return produtoRepository.save(produto);
     }
 
     public List<Produto> listarTodosProdutos(Long fkUsuario) {

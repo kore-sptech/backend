@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS categoria (
-                                         id_categoria BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                         nome VARCHAR (45) NOT NULL,
+    id_categoria BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR (45) NOT NULL,
     descricao VARCHAR (150)
     );
 

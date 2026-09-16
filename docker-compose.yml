@@ -1,17 +1,22 @@
 services:
+
   database:
     image: mysql:9
-    user: "0:0"
+    restart: unless-stopped
+
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: test
-      MYSQL_LOWER_CASE_TABLE_NAMES: "1"
+
     ports:
       - "127.0.0.1:3307:3306"
-    command: --bind-address=0.0.0.0
+
+    command:
+      - --bind-address=0.0.0.0
+
     volumes:
       - MYSQL_DATA:/var/lib/mysql
-      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
+
     healthcheck:
       test:
         [
@@ -19,39 +24,45 @@ services:
           "mysqladmin",
           "ping",
           "-h",
-          "localhost",
+          "127.0.0.1",
           "-u",
-          "root",
-          "-p$$MYSQL_ROOT_PASSWORD",
+          "root"
         ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 30s
+
 
   backend:
     build:
       context: .
       dockerfile: Dockerfile
       target: prod
+
     image: kore-backend:prod
+    pull_policy: build
+
     restart: unless-stopped
+
     ports:
       - "8080:8080"
+
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
+
       JWT_SECRET: ${JWT_SECRET:-my-secret-key}
       FRONT_END_URL: ${FRONT_END_URL:-http://localhost:5173}
+
     volumes:
-      # persiste as fotos enviadas via UploadFotoController fora do container
-      # (o código salva em "../front-end/public/uploads/", que a partir do
-      # WORKDIR /app do container resolve para /front-end/public/uploads)
       - uploads:/front-end/public/uploads
+
     depends_on:
       database:
         condition: service_healthy
+
 
 volumes:
   MYSQL_DATA:

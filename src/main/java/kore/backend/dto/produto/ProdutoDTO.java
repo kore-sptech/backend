@@ -10,7 +10,6 @@ public record ProdutoDTO(
                 @NotNull Boolean possuiValidade,
                 @NotNull @Min(0) Integer qtdMinAlerta,
                 @NotNull String tipo,
-                @NotNull Long usuario,
                 Long categoriaId)
 {
 }
