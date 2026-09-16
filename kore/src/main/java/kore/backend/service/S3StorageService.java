@@ -8,12 +8,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Service
+@Slf4j
 public class S3StorageService {
 
     private final S3Client s3Client;
@@ -105,7 +107,10 @@ public class S3StorageService {
                     "Formato inválido. Utilize JPG, PNG ou WEBP.");
         }
 
-        long maxSize = 1 * 1024 * 1024;
+        long maxSize = 5 * 1024 * 1024;
+
+        log.info("Tamanho do arquivo: {} bytes", file.getSize());
+        log.info("Tamanho máximo permitido: {} bytes", maxSize);
 
         if (file.getSize() > maxSize) {
             throw new IllegalArgumentException(

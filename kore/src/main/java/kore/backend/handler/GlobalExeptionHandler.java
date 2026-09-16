@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -99,5 +100,14 @@ public class GlobalExeptionHandler {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .body(ErrorResponse.of(HttpStatus.INTERNAL_SERVER_ERROR,
                                                 "Erro interno no servidor. Tente novamente mais tarde.", request));
+        }
+
+        // ── 413 — Tamanho do arquivo excede o limite permitido ────────────────
+        @ExceptionHandler(MaxUploadSizeExceededException.class)
+        public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
+                        MaxUploadSizeExceededException ex, HttpServletRequest request) {
+                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                                .body(ErrorResponse.of(HttpStatus.PAYLOAD_TOO_LARGE,
+                                                "O tamanho do arquivo excede o limite permitido.", request));
         }
 }
