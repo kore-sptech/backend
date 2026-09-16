@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.dto.AgendamentoResponseDTO;
 import kore.backend.dto.HorarioDisponivelDTO;
-import kore.backend.exception.AgendamentoNaoEncondradoException;
+import kore.backend.exception.AgendamentoNaoEncontradoException;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Foto;
 // import kore.backend.model.Item;
@@ -94,7 +94,7 @@ public class AgendamentoService {
     @Transactional
     public void deletar(Long id) {
         Agendamento agendamento = this.agendamentoRepository.findById(id)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         this.itemRepository.deleteAllByAgendamento(agendamento);
 
@@ -121,7 +121,7 @@ public class AgendamentoService {
         System.out.println("Referencias recebidas: " + agendamento.getReferencias());
 
         Agendamento agendamentoEncontrado = this.agendamentoRepository.findById(id)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         // Validar conflitos de data se as datas foram alteradas
         if (!agendamento.getInicio().equals(agendamentoEncontrado.getInicio())
@@ -186,7 +186,7 @@ public class AgendamentoService {
     @Transactional
     public void confirmar(Long agendamentoId, Usuario usuario) {
         Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         if (agendamento.getStatus().equals(StatusAgendamento.CONFIRMADO)) {
             throw new IllegalArgumentException("Este agendamento já está confirmado");
@@ -208,7 +208,7 @@ public class AgendamentoService {
     @Transactional
     public void confirmarPagamento(Long agendamentoId, Usuario usuario) {
         Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         if (agendamento.getStatus().equals(StatusAgendamento.CONFIRMADO_PAGAMENTO)) {
             throw new IllegalArgumentException("Este agendamento já está confirmado");
@@ -225,7 +225,7 @@ public class AgendamentoService {
     @Transactional
     public void cancelar(Long agendamentoId, Usuario usuario) {
         Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         if (agendamento.getStatus().equals(StatusAgendamento.CANCELADO)) {
             throw new IllegalArgumentException("Este agendamento já está cancelado");

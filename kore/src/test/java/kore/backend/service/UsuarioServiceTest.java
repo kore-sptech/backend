@@ -2,7 +2,7 @@ package kore.backend.service;
 
 import kore.backend.dto.UsuarioDTO;
 import kore.backend.exception.CredencialExistenteException;
-import kore.backend.exception.RecursoNaoEncontradoException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import kore.backend.model.Usuario;
 import kore.backend.repository.UsuarioRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -198,7 +198,7 @@ class UsuarioServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar RecursoNaoEncontradoException ao realizar login com senha incorreta")
+    @DisplayName("Deve lançar UsernameNotFoundException ao realizar login com senha incorreta")
     void login_ComSenhaIncorreta_LancaExcecao() {
         // Arrange
         String email = "teste@teste.com";
@@ -212,9 +212,9 @@ class UsuarioServiceTest {
         when(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuarioMock));
 
         // Act & Assert
-        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class,
+        UsernameNotFoundException exception = assertThrows(UsernameNotFoundException.class,
                 () -> usuarioService.login(email, senhaIncorreta));
 
-        assertEquals("Senha incorreta", exception.getMessage());
+        assertEquals("Credenciais inválidas", exception.getMessage());
     }
 }

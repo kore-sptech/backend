@@ -2,6 +2,7 @@ package kore.backend.service;
 
 import kore.backend.exception.CredencialExistenteException;
 import kore.backend.exception.RecursoNaoEncontradoException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.UsuarioDTO;
@@ -74,10 +75,10 @@ public class UsuarioService {
 
     public Usuario login(String email, String senha) {
         Usuario usuario = this.usuarioRepository.findByEmail(email).orElseThrow(
-                () -> new RecursoNaoEncontradoException("Usuário não encontrado", 1L));
+                () -> new UsernameNotFoundException("Credenciais inválidas"));
 
         if (!usuario.getSenha().equals(senha)) {
-            throw new RecursoNaoEncontradoException("Senha incorreta", 1L);
+            throw new UsernameNotFoundException("Credenciais inválidas");
         }
 
         return usuario;

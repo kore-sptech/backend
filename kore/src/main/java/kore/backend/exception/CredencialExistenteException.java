@@ -9,6 +9,7 @@ public class CredencialExistenteException extends RuntimeException {
     private final Object valor;
 
     public CredencialExistenteException(String recurso, String email) {
+        super(recurso);
         this.recurso = recurso;
         this.campo = "email";
         this.valor = email;

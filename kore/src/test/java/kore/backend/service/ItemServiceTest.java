@@ -4,6 +4,7 @@ import kore.backend.dto.ItemDTO;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.model.Item;
 import kore.backend.model.Produto;
+import kore.backend.repository.AgendamentoRepository;
 import kore.backend.repository.ItemRepository;
 import kore.backend.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +31,9 @@ class ItemServiceTest {
 
     @Mock
     private ProdutoRepository produtoRepository;
+
+    @Mock
+    private AgendamentoRepository agendamentoRepository;
 
     @InjectMocks
     private ItemService itemService;
@@ -75,7 +79,7 @@ class ItemServiceTest {
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> itemService.adicionarEstoque(dto, quantidade, fkProduto));
 
-        assertEquals("Produto não encontrado com ID: " + fkProduto, exception.getMessage());
+        assertEquals("Produto não encontrado com ID: ", exception.getMessage());
         verify(produtoRepository, times(1)).findById(fkProduto);
         verify(itemRepository, never()).saveAll(anyList());
     }

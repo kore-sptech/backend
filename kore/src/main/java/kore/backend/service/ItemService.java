@@ -2,6 +2,7 @@ package kore.backend.service;
 
 import jakarta.transaction.Transactional;
 import kore.backend.dto.ItemDTO;
+import kore.backend.exception.AgendamentoNaoEncontradoException;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Item;
@@ -63,9 +64,9 @@ public class ItemService {
     @Transactional
     public Item atualizarEstoqueComAgendamento(Long idEstoque, Long idAgendamento) {
         Item i = itemRepository.findById(idEstoque)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto nao encontrado", idEstoque));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Item não encontrado", idEstoque));
         Agendamento a = agendamentoRepository.findById(idAgendamento)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Agendamento nao encontrado", idAgendamento));
+                .orElseThrow(() -> new AgendamentoNaoEncontradoException(idAgendamento));
         i.setAgendamento(a);
         i.setSeAtivo(false);
         return itemRepository.save(i);

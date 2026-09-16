@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import kore.backend.dto.produto.ProdutoDTO;
 import kore.backend.model.Produto;
 import kore.backend.service.ProdutoService;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,20 +45,11 @@ public class ProdutoController {
     })
     @GetMapping
     public ResponseEntity<List<Produto>> listrarProdutos() {
-        try {
-            List<Produto> p = produtoService.listarTodosProdutos();
-            if (p.isEmpty()) {
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.ok().body(p);
-        } catch (Exception e) {
-            if (e instanceof DataAccessException) {
-                // adicionar logs depois
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
-            }
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        List<Produto> p = produtoService.listarTodosProdutos();
+        if (p.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
-
+        return ResponseEntity.ok().body(p);
     }
 
     @Operation(summary = "Atualização de produto", description = "Atualiza o produto")
@@ -72,14 +62,8 @@ public class ProdutoController {
     public ResponseEntity<Produto> atualizarProduto(
             @PathVariable Long id,
             @Valid @RequestBody ProdutoDTO produtoDTO) {
-        try {
-            Produto p = produtoService.atualizarProduto(id, produtoDTO);
-            return ResponseEntity.ok(p);
-        } catch (Exception e) {
-            if (e instanceof DataAccessException)
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        Produto p = produtoService.atualizarProduto(id, produtoDTO);
+        return ResponseEntity.ok(p);
     }
 
     @Operation(summary = "Remoção de produto", description = "Remove o produto")
@@ -89,14 +73,8 @@ public class ProdutoController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarProduto(@PathVariable Long id) {
-        try {
-            produtoService.deletarProduto(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            if (e instanceof DataAccessException)
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        produtoService.deletarProduto(id);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Upload de imagem do produto", description = "Adiciona ou substitui a imagem do produto"

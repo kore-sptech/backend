@@ -105,7 +105,7 @@ public class S3StorageService {
                     "Formato inválido. Utilize JPG, PNG ou WEBP.");
         }
 
-        long maxSize = 5 * 1024 * 1024;
+        long maxSize = 1 * 1024 * 1024;
 
         if (file.getSize() > maxSize) {
             throw new IllegalArgumentException(

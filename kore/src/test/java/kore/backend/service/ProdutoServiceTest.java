@@ -3,7 +3,10 @@ package kore.backend.service;
 import kore.backend.dto.produto.ProdutoDTO;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.model.Produto;
+import kore.backend.repository.CategoriaRepository;
 import kore.backend.repository.ProdutoRepository;
+import kore.backend.repository.UsuarioRepository;
+import kore.backend.service.S3StorageService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +28,15 @@ class ProdutoServiceTest {
     @Mock
     private ProdutoRepository produtoRepository;
 
+    @Mock
+    private UsuarioRepository usuarioRepository;
+
+    @Mock
+    private CategoriaRepository categoriaRepository;
+
+    @Mock
+    private S3StorageService s3StorageService;
+
     @InjectMocks
     private ProdutoService produtoService;
 
@@ -32,11 +44,12 @@ class ProdutoServiceTest {
     @DisplayName("Deve salvar um produto com sucesso")
     void salvarProduto_ComDadosValidos_RetornaProdutoSalvo() {
         // Arrange (Preparar)
-        ProdutoDTO dto = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10, null, null, null);
+        ProdutoDTO dto = new ProdutoDTO("Teclado", "Teclado Mecânico", false, 10, "Tipo", 1L, null);
         Produto produtoSalvo = new Produto(dto);
         // Assumindo que a entidade geraria um ID no banco
         produtoSalvo.setId(1L);
 
+        when(usuarioRepository.existsById(1L)).thenReturn(true);
         when(produtoRepository.save(any(Produto.class))).thenReturn(produtoSalvo);
 
         // Act (Agir)

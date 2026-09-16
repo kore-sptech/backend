@@ -7,6 +7,7 @@ import kore.backend.model.enums.CategoriaTransacao;
 import kore.backend.model.enums.TipoTransacao;
 import kore.backend.repository.AgendamentoRepository;
 import kore.backend.repository.TransacaoRepository;
+import kore.backend.service.AgendamentoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,9 @@ class TransacaoServiceTest {
 
     @Mock
     private AgendamentoRepository agendamentoRepository;
+
+    @Mock
+    private AgendamentoService agendamentoService;
 
     @InjectMocks
     private TransacaoService transacaoService;

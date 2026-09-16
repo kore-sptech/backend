@@ -100,7 +100,7 @@ public class ProdutoService {
     @Transactional
     public void deletarProduto(Long id) {
         if (!produtoRepository.existsById(id)) {
-            throw new RecursoNaoEncontradoException("Usuário não encontrado", id);
+            throw new RecursoNaoEncontradoException("Produto não encontrado", id);
         }
         produtoRepository.deleteById(id);
     }

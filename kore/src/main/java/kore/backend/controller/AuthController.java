@@ -1,10 +1,12 @@
 package kore.backend.controller;
 
-import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import kore.backend.config.security.TokenService;
 import kore.backend.dto.LoginDTO;
 import kore.backend.dto.LoginResponseDTO;
+import kore.backend.handler.ErrorResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,7 +32,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @SecurityRequirements
-    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO, HttpServletRequest request) {
 
         try {
             var usernamePassword = new UsernamePasswordAuthenticationToken(loginDTO.email(), loginDTO.senha());
@@ -39,7 +41,8 @@ public class AuthController {
             var token = tokenService.generateToken(usuario);
             return ResponseEntity.ok(new LoginResponseDTO(token, usuario.getNome()));
         } catch (org.springframework.security.core.AuthenticationException e) {
-            return ResponseEntity.status(401).body("Email ou senha inválidos");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ErrorResponse.of(HttpStatus.UNAUTHORIZED, "Email ou senha inválidos", request));
         }
     }
 
