@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.dto.AgendamentoResponseDTO;
 import kore.backend.dto.HorarioDisponivelDTO;
-import kore.backend.exception.AgendamentoNaoEncondradoException;
+import kore.backend.exception.AgendamentoNaoEncontradoException;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Foto;
 import kore.backend.repository.AgendamentoRepository;
@@ -74,7 +74,7 @@ public class AgendamentoService {
     @Transactional
     public void deletar(Long id) {
         Agendamento agendamento = this.agendamentoRepository.findById(id)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         this.itemRepository.deleteAllByAgendamento(agendamento);
 
@@ -98,7 +98,7 @@ public class AgendamentoService {
     @Transactional
     public Agendamento atualizar(Long id, AgendamentoRequestDTO agendamento, Usuario usuario) {
         Agendamento agendamentoEncontrado = this.agendamentoRepository.findById(id)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         if (!agendamento.getInicio().equals(agendamentoEncontrado.getInicio())
                 || !agendamento.getFim().equals(agendamentoEncontrado.getFim())) {
@@ -144,7 +144,7 @@ public class AgendamentoService {
     @Transactional
     public void confirmar(Long agendamentoId, Usuario usuario) {
         Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         agendamentoPolicy.validarConfirmacao(agendamento, usuario);
         agendamento.setStatus(StatusAgendamento.CONFIRMADO);
@@ -155,7 +155,7 @@ public class AgendamentoService {
     @Transactional
     public void confirmarPagamento(Long agendamentoId, Usuario usuario) {
         Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         agendamentoPolicy.validarPagamento(agendamento);
         agendamento.setStatus(StatusAgendamento.CONFIRMADO_PAGAMENTO);
@@ -165,7 +165,7 @@ public class AgendamentoService {
     @Transactional
     public void cancelar(Long agendamentoId, Usuario usuario) {
         Agendamento agendamento = this.agendamentoRepository.findById(agendamentoId)
-                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
         agendamentoPolicy.validarCancelamento(agendamento);
         agendamento.setStatus(StatusAgendamento.CANCELADO);

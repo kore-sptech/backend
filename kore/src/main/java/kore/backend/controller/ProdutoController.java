@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import kore.backend.dto.produto.ProdutoDTO;
 import kore.backend.model.Produto;
 import kore.backend.service.ProdutoService;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -24,20 +24,18 @@ public class UploadFotoController {
     }
 
     @PostMapping
-    public ResponseEntity<?> upload(
+    public ResponseEntity<Foto> upload(
             @RequestParam("foto") MultipartFile file) {
 
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body("Arquivo vazio");
+            throw new IllegalArgumentException("Arquivo vazio");
         }
 
         String contentType = file.getContentType();
 
         if (!"image/jpeg".equals(contentType)
                 && !"image/png".equals(contentType)) {
-            return ResponseEntity.badRequest()
-                    .body("Formato de arquivo não permitido");
+            throw new IllegalArgumentException("Formato de arquivo não permitido");
         }
 
         try {
@@ -45,7 +43,7 @@ public class UploadFotoController {
 
             return ResponseEntity.ok(foto);
         } catch (IOException e) {
-            return ResponseEntity.status(500).body("Upload failed: " + e.getMessage());
+            throw new RuntimeException("Erro ao processar o upload da foto", e);
         }
     }
 

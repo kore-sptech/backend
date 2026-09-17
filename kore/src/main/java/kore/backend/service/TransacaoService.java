@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import kore.backend.exception.AgendamentoNaoEncondradoException;
+import kore.backend.exception.AgendamentoNaoEncontradoException;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.model.Agendamento;
 import kore.backend.repository.AgendamentoRepository;
@@ -55,7 +55,7 @@ public class TransacaoService {
                 Transacao transacao = TransacaoMapper.fromDto(transacaoDTO);
 
                 Agendamento agendamento = agendamentoRepository.findById(agendamentoId)
-                                .orElseThrow(AgendamentoNaoEncondradoException::new);
+                                .orElseThrow(AgendamentoNaoEncontradoException::new);
 
                 validarValorTransacao(transacao);
                 transacao.setUsuario(usuario);

@@ -2,6 +2,7 @@ package kore.backend.service;
 
 import jakarta.transaction.Transactional;
 import kore.backend.dto.ItemDTO;
+import kore.backend.exception.AgendamentoNaoEncontradoException;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.mapper.ItemMapper;
 import kore.backend.model.Agendamento;
