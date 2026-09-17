@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.AnonymousAuthenticationFi
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Arrays;
 
@@ -30,6 +31,9 @@ public class SecurityConfiguration {
     private final SecurityFilter securityFilter;
 
     private final AuthService authService;
+
+    @Value("${front-end.url}")
+    private String frontEndUrl;
 
     private final String[] ROUTE_PERMIT = {
             "/v3/api-docs",
@@ -69,7 +73,7 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList("*")); // Se quiser restringir depois, troque "*" por
+        configuration.setAllowedOrigins(Arrays.asList(frontEndUrl)); // Se quiser restringir depois, troque "*" por
                                                              // "http://localhost:3000" (ou a porta do seu front)
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));

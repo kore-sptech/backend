@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/fotos")
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 public class UploadFotoController {
 
     private final FotoService fotoService;

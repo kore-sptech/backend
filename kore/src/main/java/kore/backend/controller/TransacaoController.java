@@ -30,7 +30,7 @@ import kore.backend.model.Usuario;
 import kore.backend.service.TransacaoService;
 
 @RestController
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+//@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/transacoes")
 public class TransacaoController {
 

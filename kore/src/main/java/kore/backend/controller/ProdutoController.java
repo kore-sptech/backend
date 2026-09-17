@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/produtos")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+//@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Tag(name = "Produto", description = "Operações relacionadas ao CRUD do Produto")
 public class ProdutoController {
     private final ProdutoService produtoService;
