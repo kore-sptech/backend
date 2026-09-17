@@ -2,7 +2,6 @@ package kore.backend.controller;
 
 import kore.backend.dto.ItemDTO;
 import kore.backend.model.Item;
-import kore.backend.model.Produto;
 import kore.backend.service.ItemService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
