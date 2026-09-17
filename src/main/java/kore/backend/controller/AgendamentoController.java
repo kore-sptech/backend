@@ -20,7 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/agendamentos")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+//@CrossOrigin(origins = "*", allowedHeaders = "*")
 @SecurityRequirement(name = OpenApiConfig.SECURITY_SCHEMA_NAME)
 public class AgendamentoController {
 

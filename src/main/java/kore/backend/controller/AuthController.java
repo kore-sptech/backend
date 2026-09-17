@@ -18,7 +18,7 @@ import kore.backend.model.Usuario;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+//@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
