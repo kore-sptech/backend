@@ -1,7 +1,7 @@
 package kore.backend.service;
 
-import kore.backend.exception.RecursoNaoEncontradoException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import kore.backend.model.Categoria;
+import kore.backend.repository.CategoriaRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.UsuarioDTO;
@@ -19,13 +19,16 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioValidationService usuarioValidationService;
     private final UsuarioPolicy usuarioPolicy;
+    private final CategoriaRepository categoriaRepository;
 
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-                         UsuarioValidationService usuarioValidationService, UsuarioPolicy usuarioPolicy) {
+                         UsuarioValidationService usuarioValidationService, UsuarioPolicy usuarioPolicy,
+                         CategoriaRepository categoriaRepository) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.usuarioValidationService = usuarioValidationService;
         this.usuarioPolicy = usuarioPolicy;
+        this.categoriaRepository = categoriaRepository;
     }
 
     @Transactional
@@ -37,7 +40,28 @@ public class UsuarioService {
         p.setNome(usuarioDTO.nome());
         p.setSenha(passwordEncoder.encode(usuarioDTO.senha()));
 
-        return usuarioRepository.save(p);
+        Usuario usuarioSalvo = usuarioRepository.save(p);
+
+        // Criar categorias padrão para o novo usuário
+        criarCategoriasPadrao(usuarioSalvo.getId());
+
+        return usuarioSalvo;
+    }
+
+    private void criarCategoriasPadrao(Long usuarioId) {
+        String[][] categoriasPadrao = {
+            {"Tintas", "Tintas de tatuagem"},
+            {"Agulhas", "Agulhas descartáveis"},
+            {"Luvas", "Luvas descartáveis"},
+            {"Biqueiras", "Biqueiras/tips descartáveis"},
+            {"Limpeza", "Material de limpeza e esterilização"},
+            {"Equipamentos", "Máquinas, fontes, cabos"}
+        };
+
+        for (String[] cat : categoriasPadrao) {
+            Categoria categoria = new Categoria(cat[0], cat[1], usuarioId);
+            categoriaRepository.save(categoria);
+        }
     }
 
     public Usuario buscar(Long id) {

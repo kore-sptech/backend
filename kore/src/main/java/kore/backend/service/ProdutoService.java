@@ -54,11 +54,11 @@ public class ProdutoService {
                     produtoId,
                     arquivo.getOriginalFilename());
 
-            s3StorageService.upload(objectKey, arquivo);
+            String imagemPublica = s3StorageService.upload(objectKey, arquivo);
 
             String imagemAntiga = produto.getImagemKey();
 
-            produto.setImagemKey(objectKey);
+            produto.setImagemKey(imagemPublica);
 
             Produto produtoAtualizado = produtoRepository.save(produto);
 
@@ -83,11 +83,13 @@ public class ProdutoService {
     @Transactional
     public Produto atualizarProduto(Long fkUsuario, Long id, ProdutoDTO produtoDTO) {
         Produto p = produtoPolicy.validarProdutoDoUsuario(id, fkUsuario);
+        p.setCategoria(categoriaValidationService.obterCategoriaDoUsuario(produtoDTO.categoriaId(), fkUsuario));
         p.atualizarProduto(
                 produtoDTO.descricao(),
                 produtoDTO.nome(),
                 produtoDTO.qtdMinAlerta(),
-                produtoDTO.tipo());
+                produtoDTO.tipo(),
+                p.getCategoria());
         return produtoRepository.save(p);
     }
 

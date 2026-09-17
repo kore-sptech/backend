@@ -30,7 +30,6 @@ public class AgendamentoScheduler {
         LocalDateTime janelaInicio = agora.plusMinutes(0);
         LocalDateTime janelaFim = agora.plusMinutes(11);
 
-        log.info("Scheduler rodando. Buscando agendamentos entre {} e {}", janelaInicio, janelaFim);
         agendamentoRepository
                 .findByInicioBetweenAndStatus(janelaInicio, janelaFim, StatusAgendamento.PENDENTE)
                 .forEach(agendamento -> {

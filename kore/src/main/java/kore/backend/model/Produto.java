@@ -50,7 +50,8 @@ public class Produto {
     public Produto() {
     }
 
-    public Produto(Long id, String nome, String descricao, Boolean possuiValidade, Integer qtdMinAlerta, Long fkUsuario, String tipo) {
+    public Produto(Long id, String nome, String descricao, Boolean possuiValidade, Integer qtdMinAlerta, Long fkUsuario,
+            String tipo) {
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;
@@ -64,14 +65,16 @@ public class Produto {
             String descricao,
             String nome,
             Integer qtdMinAlerta,
-            String tipo
-    ){
+            String tipo,
+            Categoria categoria) {
         this.descricao = descricao;
         this.nome = nome;
         this.qtdMinAlerta = qtdMinAlerta;
         this.tipo = tipo;
+        this.categoria = categoria;
     }
-    public void adicionarEstoque(List<Item> itens){
+
+    public void adicionarEstoque(List<Item> itens) {
         itens.forEach(item -> itens.add(item));
     }
 }

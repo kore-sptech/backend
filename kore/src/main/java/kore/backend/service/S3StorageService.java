@@ -1,6 +1,7 @@
 package kore.backend.service;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Paths;
 import java.util.UUID;
 
@@ -55,9 +56,22 @@ public class S3StorageService {
             return;
         }
 
+        String normalizedObjectKey = objectKey;
+
+        if (objectKey.startsWith("http://") || objectKey.startsWith("https://")) {
+            try {
+                normalizedObjectKey = URI.create(objectKey).getPath();
+                if (normalizedObjectKey.startsWith("/")) {
+                    normalizedObjectKey = normalizedObjectKey.substring(1);
+                }
+            } catch (IllegalArgumentException ignored) {
+                normalizedObjectKey = objectKey;
+            }
+        }
+
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucketName)
-                .key(objectKey)
+                .key(normalizedObjectKey)
                 .build());
     }
 
