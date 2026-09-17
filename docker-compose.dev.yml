@@ -1,0 +1,108 @@
+services:
+  database:
+    image: mysql:9
+    user: "0:0"
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_DATABASE: test
+      MYSQL_LOWER_CASE_TABLE_NAMES: "1"
+    ports:
+      - "127.0.0.1:3306:3306"
+    command: --bind-address=0.0.0.0 --socket=/var/run/mysqld/mysqld.sock
+    tmpfs:
+      - /var/run/mysqld
+    volumes:
+      - MYSQL_DATA_DEV:/var/lib/mysql:z
+      # - ./kore/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p$$MYSQL_ROOT_PASSWORD",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./kore
+      dockerfile: Dockerfile
+      target: dev
+    image: kore-backend:dev
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+      # porta de debug remoto (attach do IDE), opcional
+      - "5005:5005"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+      JWT_SECRET: ${JWT_SECRET:-my-secret-key}
+      FRONT_END_URL: ${FRONT_END_URL:-http://localhost:5173}
+    volumes:
+      # live reload: o código do host é montado no container; o
+      # dev-entrypoint.sh observa src/ e recompila a cada alteração,
+      # o que dispara o restart automático do spring-boot-devtools
+      - ./kore:/app:z
+      # target isolado do host (volume anônimo) para não misturar
+      # artefatos de build do container com os do seu SO local
+      - /app/target
+      # cache de dependências do Maven entre reinícios do container
+      - maven_repo:/root/.m2
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  kore-notification:
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
+      target: dev
+    image: kore-notification:dev
+    env_file:
+      - .env
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+
+    volumes:
+      - ./notification:/app:z
+      - /app/target
+      - maven_repo:/root/.m2
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  MYSQL_DATA_DEV:
+  maven_repo:

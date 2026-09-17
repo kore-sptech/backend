@@ -1,0 +1,91 @@
+services:
+  database:
+    image: mysql:9
+    user: "0:0"
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_DATABASE: test
+      MYSQL_LOWER_CASE_TABLE_NAMES: "1"
+    ports:
+      - "127.0.0.1:3306:3306"
+    command: --bind-address=0.0.0.0 --socket=/var/run/mysqld/mysqld.sock
+    tmpfs:
+      - /var/run/mysqld
+    volumes:
+      - MYSQL_DATA:/var/lib/mysql:z
+      # - ./kore/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p$$MYSQL_ROOT_PASSWORD",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./kore
+      dockerfile: Dockerfile
+      target: prod
+    image: kore-backend:prod
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+      JWT_SECRET: ${JWT_SECRET:-my-secret-key}
+      FRONT_END_URL: ${FRONT_END_URL:-http://localhost:5173}
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  kore-notification:
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
+      target: prod
+    image: kore-notification:prod
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  MYSQL_DATA:
+  maven_repo:
