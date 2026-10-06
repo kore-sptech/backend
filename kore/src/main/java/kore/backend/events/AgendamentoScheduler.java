@@ -1,15 +1,19 @@
 package kore.backend.events;
 
 import kore.backend.model.enums.StatusAgendamento;
+import kore.backend.messaging.NotificationMessage;
+import kore.backend.messaging.NotificationOutboxService;
 import kore.backend.repository.AgendamentoRepository;
 import kore.backend.service.ServerSentEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Component
 @RequiredArgsConstructor
@@ -20,22 +24,40 @@ public class AgendamentoScheduler {
 
     private final AgendamentoRepository agendamentoRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificationOutboxService notificationOutboxService;
 
-    @Scheduled(fixedDelay = 10_000) // a cada 1 minuto é suficiente para janela de ±1 min
+    @Value("${app.rabbitmq.routing-key.appointment}")
+    private String appointmentRoutingKey;
+
+    @Scheduled(fixedDelayString = "${app.notification.appointment-poll-interval-ms:10000}")
     public void verificarAgendamentosProximos() {
         LocalDateTime agora = LocalDateTime.now();
-
-        // Janela de ±1 minuto em torno dos 10 minutos — evita tanto perder quanto
-        // duplicar
-        LocalDateTime janelaInicio = agora.plusMinutes(0);
-        LocalDateTime janelaFim = agora.plusMinutes(11);
+        LocalDateTime janelaFim = agora.plusMinutes(15);
 
         agendamentoRepository
-                .findByInicioBetweenAndStatus(janelaInicio, janelaFim, StatusAgendamento.PENDENTE)
+                .findByInicioBetweenAndStatus(agora, janelaFim, StatusAgendamento.PENDENTE)
                 .forEach(agendamento -> {
-                    // publique apenas o id para evitar passar a entidade JPA (detached)
+                    notificationOutboxService.enqueue(new NotificationMessage(
+                            "appointment-upcoming:" + agendamento.getId(),
+                            1,
+                            "APPOINTMENT_UPCOMING",
+                            "Agendamento próximo",
+                            String.format("Agendamento de %s começa em %s.",
+                                    agendamento.getCliente(),
+                                    agendamento.getInicio().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))),
+                            "APPOINTMENT",
+                            "INFO",
+                            agendamento.getId(),
+                            agendamento.getCliente(),
+                            agendamento.getInicio(),
+                            null,
+                            agendamento.getUsuario() == null ? null : agendamento.getUsuario().getId(),
+                            null,
+                            null,
+                            null),
+                            appointmentRoutingKey);
                     eventPublisher.publishEvent(new AgendamentoProximoEvent(this, agendamento.getId()));
-                    log.info("Evento publicado para agendamento ID: {}", agendamento.getId());
+                    log.info("Evento de notificação enfileirado para agendamento ID: {}", agendamento.getId());
                 });
     }
 

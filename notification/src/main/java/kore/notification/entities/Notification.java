@@ -10,6 +10,7 @@ public class Notification {
     private String title;
     private String message;
     private boolean read = false;
+    private String sourceEventId;
     private NotificationType type;
     private NotificationLevel level;
     private LocalDateTime createdAt;
@@ -18,11 +19,17 @@ public class Notification {
     }
 
     public Notification(String title, String message, NotificationType type, NotificationLevel level) {
+        this(title, message, type, level, null);
+    }
+
+    public Notification(String title, String message, NotificationType type, NotificationLevel level,
+            String sourceEventId) {
         this.title = title;
         this.message = message;
         this.type = type;
         this.level = level;
         this.read = false;
+        this.sourceEventId = sourceEventId;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -56,6 +63,14 @@ public class Notification {
 
     public void setRead(boolean read) {
         this.read = read;
+    }
+
+    public String getSourceEventId() {
+        return sourceEventId;
+    }
+
+    public void setSourceEventId(String sourceEventId) {
+        this.sourceEventId = sourceEventId;
     }
 
     public NotificationType getType() {

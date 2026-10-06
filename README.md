@@ -183,13 +183,16 @@ O frontend se conecta a esse endpoint via `NotificationProvider`, permitindo not
 
 ## Mensageria
 
-A comunicação entre os serviços utiliza RabbitMQ. A fila principal é:
+A comunicação entre a API e o microsserviço de notificações utiliza uma exchange `topic` durável (`kore.notification.events`) e uma fila durável (`kore.notification.events.queue`). Os eventos são roteados por:
 
 ```text
-notification-queue
+notification.appointment.upcoming
+notification.stock.below-threshold
 ```
 
-A API principal publica eventos de notificação e o microsserviço de notificações os consome.
+A API grava os eventos em um outbox transacional e só os marca como publicados após confirmação do RabbitMQ. O microsserviço valida e persiste cada notificação idempotentemente na tabela `notifications`. Após três tentativas de consumo, mensagens rejeitadas são encaminhadas para a DLQ `kore.notification.events.dlq` pela exchange `kore.notification.events.dlx`.
+
+As credenciais usam `RABBITMQ_DEFAULT_USER` e `RABBITMQ_DEFAULT_PASS`; o host pode ser definido com `RABBITMQ_HOST`. Para inspecionar mensagens pendentes e a DLQ, use a interface de gerenciamento do RabbitMQ documentada na seção de execução Docker.
 
 ## Testes
 

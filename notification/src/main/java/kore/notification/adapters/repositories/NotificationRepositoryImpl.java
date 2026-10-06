@@ -27,4 +27,9 @@ public class NotificationRepositoryImpl implements INotificationRepository {
         return notificationMapper.toDomain(jpaNotificationEntity);
     }
 
+    @Override
+    public boolean existsBySourceEventId(String sourceEventId) {
+        return jpaNotificationRepository.existsBySourceEventId(sourceEventId);
+    }
+
 }

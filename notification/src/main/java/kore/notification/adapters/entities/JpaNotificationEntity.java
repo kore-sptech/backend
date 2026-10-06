@@ -41,6 +41,9 @@ public class JpaNotificationEntity {
     @Column(nullable = false, name = "is_read")
     private boolean read = false;
 
+    @Column(name = "source_event_id", unique = true, length = 128)
+    private String sourceEventId;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private NotificationType type;
@@ -58,6 +61,7 @@ public class JpaNotificationEntity {
         this.title = notification.getTitle();
         this.message = notification.getMessage();
         this.read = notification.isRead();
+        this.sourceEventId = notification.getSourceEventId();
         this.type = notification.getType();
         this.level = notification.getLevel();
         this.createdAt = notification.getCreatedAt();
