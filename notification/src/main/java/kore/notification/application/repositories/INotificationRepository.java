@@ -4,4 +4,5 @@ import kore.notification.entities.Notification;
 
 public interface INotificationRepository extends ISaveEntityRepository<Notification> {
 
+    boolean existsBySourceEventId(String sourceEventId);
 }

@@ -6,4 +6,5 @@ import kore.notification.adapters.entities.JpaNotificationEntity;
 
 public interface JpaNotificationRepository extends JpaRepository<JpaNotificationEntity, Long> {
 
+    boolean existsBySourceEventId(String sourceEventId);
 }

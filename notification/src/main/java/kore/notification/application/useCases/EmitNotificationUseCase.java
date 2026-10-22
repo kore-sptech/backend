@@ -39,7 +39,8 @@ public class EmitNotificationUseCase {
                 request.title(),
                 request.message(),
                 NotificationType.valueOf(request.type()),
-                NotificationLevel.valueOf(request.level()));
+                NotificationLevel.valueOf(request.level()),
+                request.sourceEventId());
 
         notification = notificationRepository.save(notification);
 
@@ -51,7 +52,12 @@ public class EmitNotificationUseCase {
                 notification.getLevel().name());
     }
 
-    public static record NotificationRequest(String title, String message, String type, String level) {
+    public static record NotificationRequest(
+            String title, String message, String type, String level, String sourceEventId) {
+
+        public NotificationRequest(String title, String message, String type, String level) {
+            this(title, message, type, level, null);
+        }
     }
 
     public static record NotificationResponse(Long id, String title, String message, String type, String level) {

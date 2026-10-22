@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 ##########################################################################
 # STAGE: base -> baixa as dependências do Maven (cache reaproveitado
 # entre dev e prod, e entre builds enquanto o pom.xml não mudar)
