@@ -37,25 +37,7 @@ public class AgendamentoScheduler {
         agendamentoRepository
                 .findByInicioBetweenAndStatus(agora, janelaFim, StatusAgendamento.PENDENTE)
                 .forEach(agendamento -> {
-                    notificationOutboxService.enqueue(new NotificationMessage(
-                            "appointment-upcoming:" + agendamento.getId(),
-                            1,
-                            "APPOINTMENT_UPCOMING",
-                            "Agendamento próximo",
-                            String.format("Agendamento de %s começa em %s.",
-                                    agendamento.getCliente(),
-                                    agendamento.getInicio().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))),
-                            "APPOINTMENT",
-                            "INFO",
-                            agendamento.getId(),
-                            agendamento.getCliente(),
-                            agendamento.getInicio(),
-                            null,
-                            agendamento.getUsuario() == null ? null : agendamento.getUsuario().getId(),
-                            null,
-                            null,
-                            null),
-                            appointmentRoutingKey);
+                   
                     eventPublisher.publishEvent(new AgendamentoProximoEvent(this, agendamento.getId()));
                     log.info("Evento de notificação enfileirado para agendamento ID: {}", agendamento.getId());
                 });

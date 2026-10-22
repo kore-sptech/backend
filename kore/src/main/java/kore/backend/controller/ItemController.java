@@ -1,6 +1,7 @@
 package kore.backend.controller;
 
 import kore.backend.dto.ItemDTO;
+import kore.backend.dto.ItemEstoqueResponseDTO;
 import kore.backend.model.Item;
 import kore.backend.service.ItemService;
 import org.springframework.http.HttpStatus;
@@ -29,12 +30,18 @@ public class ItemController {
         return ResponseEntity.ok().body(estoque);
     }
     @GetMapping("/agendamento/{id}")
-    public ResponseEntity<List<Item>> buscarEstoquePorAgendamento(@PathVariable Long id){
-        List<Item> estoque = itemService.buscarItensPorAgendamento(id);
+    public ResponseEntity<List<ItemEstoqueResponseDTO>> buscarEstoquePorAgendamento(@PathVariable Long id){
+        List<ItemEstoqueResponseDTO> estoque = itemService.buscarItensPorAgendamento(id);
         if (estoque.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok().body(estoque);
+    }
+
+    @DeleteMapping("/{id}/agendamento")
+    public ResponseEntity<Item> desassociarEstoqueDeAgendamento(@PathVariable Long id) {
+        Item item = itemService.desassociarEstoqueDeAgendamento(id);
+        return ResponseEntity.ok(item);
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removerEstoque(@PathVariable Long id) {

@@ -2,6 +2,7 @@ package kore.backend.service;
 
 import jakarta.transaction.Transactional;
 import kore.backend.dto.ItemDTO;
+import kore.backend.dto.ItemEstoqueResponseDTO;
 import kore.backend.exception.RecursoNaoEncontradoException;
 import kore.backend.messaging.NotificationMessage;
 import kore.backend.messaging.NotificationOutboxService;
@@ -123,10 +124,23 @@ public class ItemService {
                 stockRoutingKey);
     }
 
-    public List<Item> buscarItensPorAgendamento(Long idSessao){
-        List<Item> itens = itemRepository.buscarPorIdDoAgendamento(idSessao)
-                .orElse(Collections.emptyList());
-        ;
-        return itens;
+    @Transactional
+    public Item desassociarEstoqueDeAgendamento(Long idEstoque) {
+        Item i = itemRepository.findById(idEstoque)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto nao encontrado", idEstoque));
+        Produto produto = i.getProduto();
+        long quantidadeAnterior = itemRepository.contarItensAtivosPorProduto(produto.getId());
+        i.setAgendamento(null);
+        i.setSeAtivo(true);
+        Item itemAtualizado = itemRepository.save(i);
+        verificarTransicaoEstoque(produto, quantidadeAnterior);
+        return itemAtualizado;
+    }
+
+    public List<ItemEstoqueResponseDTO> buscarItensPorAgendamento(Long idAgendamento){
+        List<Item> itens = itemRepository.buscarPorIdDoAgendamento(idAgendamento);
+        return itens.stream()
+                .map(ItemEstoqueResponseDTO::fromEntity)
+                .toList();
     }
 }
