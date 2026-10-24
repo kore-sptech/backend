@@ -9,9 +9,12 @@ import kore.backend.messaging.NotificationOutboxService;
 import kore.backend.mapper.ItemMapper;
 import kore.backend.model.Agendamento;
 import kore.backend.model.Item;
-import kore.backend.model.Produto;
+import kore.backend.model.Usuario;
+import kore.backend.repository.UsuarioRepository;
+import kore.backend.service.TransacaoService;
 import kore.backend.repository.AgendamentoRepository;
 import kore.backend.repository.ItemRepository;
+import kore.backend.model.Produto;
 import kore.backend.repository.ProdutoRepository;
 import kore.backend.service.validation.ItemValidationService;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +32,8 @@ public class ItemService {
     private final AgendamentoRepository agendamentoRepository;
     private final ItemValidationService itemValidationService;
     private final NotificationOutboxService notificationOutboxService;
+    private final TransacaoService transacaoService;
+    private final UsuarioRepository usuarioRepository;
 
     @Value("${app.rabbitmq.routing-key.stock}")
     private String stockRoutingKey;
@@ -38,12 +43,16 @@ public class ItemService {
             ProdutoRepository produtoRepository,
             AgendamentoRepository agendamentoRepository,
             ItemValidationService itemValidationService,
-            NotificationOutboxService notificationOutboxService) {
+            NotificationOutboxService notificationOutboxService,
+            TransacaoService transacaoService,
+            UsuarioRepository usuarioRepository) {
         this.itemRepository = itemRepository;
         this.produtoRepository = produtoRepository;
         this.agendamentoRepository = agendamentoRepository;
         this.itemValidationService = itemValidationService;
         this.notificationOutboxService = notificationOutboxService;
+        this.transacaoService = transacaoService;
+        this.usuarioRepository = usuarioRepository;
 
     }
 
@@ -58,7 +67,20 @@ public class ItemService {
             estoque.add(item);
         }
 
-        return itemRepository.saveAll(estoque);
+        List<Item> salvos = itemRepository.saveAll(estoque);
+
+        if (Boolean.TRUE.equals(itemDTO.novoItem()) && itemDTO.valorUnitario() != null) {
+            double valorTotal = quantidade * itemDTO.valorUnitario();
+            Usuario usuario = usuarioRepository.findById(produto.getFkUsuario())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado", produto.getFkUsuario()));
+            transacaoService.criarTransacaoDeEstoque(
+                    valorTotal,
+                    "Compra de estoque — " + produto.getNome(),
+                    usuario,
+                    produto);
+        }
+
+        return salvos;
     }
 
     public List<Item> listarEstoque(Long produtoFk) {

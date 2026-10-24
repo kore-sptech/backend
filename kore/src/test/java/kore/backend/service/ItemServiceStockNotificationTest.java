@@ -7,7 +7,11 @@ import kore.backend.model.Produto;
 import kore.backend.repository.AgendamentoRepository;
 import kore.backend.repository.ItemRepository;
 import kore.backend.repository.ProdutoRepository;
+import kore.backend.repository.TransacaoRepository;
+import kore.backend.repository.UsuarioRepository;
+import kore.backend.service.TransacaoService;
 import kore.backend.service.validation.ItemValidationService;
+import kore.backend.service.validation.TransacaoValidationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -31,12 +35,18 @@ class ItemServiceStockNotificationTest {
     void setUp() {
         itemRepository = mock(ItemRepository.class);
         outboxService = mock(NotificationOutboxService.class);
+        TransacaoService transacaoService = new TransacaoService(
+                mock(TransacaoRepository.class),
+                mock(AgendamentoRepository.class),
+                mock(TransacaoValidationService.class));
         itemService = new ItemService(
                 itemRepository,
                 mock(ProdutoRepository.class),
                 mock(AgendamentoRepository.class),
                 mock(ItemValidationService.class),
-                outboxService);
+                outboxService,
+                transacaoService,
+                mock(UsuarioRepository.class));
         ReflectionTestUtils.setField(itemService, "stockRoutingKey", "notification.stock.below-threshold");
     }
 

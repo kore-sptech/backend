@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import kore.backend.dto.MetricasDTO;
 import kore.backend.dto.TransacaoDTO;
 import kore.backend.mapper.TransacaoMapper;
+import kore.backend.model.Produto;
 import kore.backend.model.Transacao;
 import kore.backend.model.Usuario;
 import kore.backend.model.enums.CategoriaTransacao;
@@ -64,9 +65,20 @@ public class TransacaoService {
                 return transacaoRepository.save(transacao);
         }
 
-        public MetricasDTO calcularMetricas(Usuario usuario) {
+        @Transactional
+        public Transacao criarTransacaoDeEstoque(Double valor, String nome, Usuario usuario, Produto produto) {
+                Transacao transacao = new Transacao();
+                transacao.setValor(valor);
+                transacao.setNome(nome);
+                transacao.setTipo(TipoTransacao.SAIDA);
+                transacao.setCategoria(CategoriaTransacao.MATERIAS);
+                transacao.setUsuario(usuario);
+                transacao.setProduto(produto);
+                validarValorTransacao(transacao);
+                return transacaoRepository.save(transacao);
+        }
 
-                // ── Janelas de tempo ─────────────────────────────────────────────────────
+        public MetricasDTO calcularMetricas(Usuario usuario) {
                 LocalDate hoje = LocalDate.now();
                 LocalDateTime inicioMesAtual = hoje.withDayOfMonth(1).atStartOfDay();
                 LocalDateTime inicioProximoMes = inicioMesAtual.plusMonths(1);

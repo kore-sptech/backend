@@ -45,6 +45,11 @@ public class Transacao {
     private Usuario usuario;
 
 
+    @ManyToOne
+    @JoinColumn(name = "fk_produto")
+    @JsonIgnore
+    private Produto produto;
+
     @OneToOne
     @JoinColumn(name = "sessao_id")
     private Agendamento sessao;
