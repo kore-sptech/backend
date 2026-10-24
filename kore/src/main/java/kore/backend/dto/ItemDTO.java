@@ -6,6 +6,7 @@ public record ItemDTO(
         LocalDateTime dataEntrada,
         Boolean seAtivo,
         Float valorUnitario,
-        LocalDateTime dataValidade
+        LocalDateTime dataValidade,
+        Boolean novoItem
 ) {
 }
