@@ -14,6 +14,7 @@ public class RabbitConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
+        mapper.setTimeZone(java.util.TimeZone.getTimeZone("America/Sao_Paulo"));
         return mapper;
     }
 
