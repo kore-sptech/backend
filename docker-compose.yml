@@ -7,9 +7,10 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
       MYSQL_DATABASE: test
       MYSQL_LOWER_CASE_TABLE_NAMES: "1"
+      TZ: America/Sao_Paulo
     ports:
       - "127.0.0.1:3306:3306"
-    command: --bind-address=0.0.0.0 --socket=/var/run/mysqld/mysqld.sock
+    command: --bind-address=0.0.0.0 --socket=/var/run/mysqld/mysqld.sock --default-time-zone=America/Sao_Paulo
     tmpfs:
       - /var/run/mysqld
     volumes:
@@ -44,11 +45,13 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test?serverTimezone=America/Sao_Paulo
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
       JWT_SECRET: ${JWT_SECRET:-my-secret-key}
       FRONT_END_URL: ${FRONT_END_URL:-http://localhost:5173}
+      TZ: America/Sao_Paulo
+      JAVA_TOOL_OPTIONS: -Duser.timezone=America/Sao_Paulo
     depends_on:
       database:
         condition: service_healthy
@@ -66,9 +69,11 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test?serverTimezone=America/Sao_Paulo
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
+      TZ: America/Sao_Paulo
+      JAVA_TOOL_OPTIONS: -Duser.timezone=America/Sao_Paulo
     depends_on:
       database:
         condition: service_healthy
