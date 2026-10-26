@@ -23,6 +23,7 @@ import kore.backend.model.Foto;
 import kore.backend.repository.AgendamentoRepository;
 import kore.backend.service.policy.AgendamentoPolicy;
 import kore.backend.service.validation.AgendamentoValidationService;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class AgendamentoService {
@@ -89,9 +90,10 @@ public class AgendamentoService {
         this.agendamentoRepository.delete(agendamento);
     }
 
-    public List<AgendamentoResponseDTO> listarEntreDatas(LocalDateTime inicio, LocalDateTime fim, Usuario usuario) {
+    public List<AgendamentoResponseDTO> listarEntreDatas(LocalDateTime inicio, LocalDateTime fim, Usuario usuario, Pageable pageable) {
 
-        return this.agendamentoRepository.findByInicioBetweenAndUsuario(inicio, fim, usuario).stream()
+        return this.agendamentoRepository.findByInicioBetweenAndUsuario(inicio, fim, usuario, pageable)
+                .stream()
                 .map(AgendamentoResponseDTO::new).collect(Collectors.toList());
     }
 

@@ -10,6 +10,9 @@ import kore.backend.service.AgendamentoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -34,13 +37,14 @@ public class AgendamentoController {
     public ResponseEntity<List<AgendamentoResponseDTO>> listar(
             @RequestParam(name = "inicio", required = false) String inicio,
             @RequestParam(name = "fim", required = false) String fim,
-            @AuthenticationPrincipal Usuario usuario
+            @AuthenticationPrincipal Usuario usuario,
+            @PageableDefault(size = 20, sort = { "inicio", "id" }, direction = Sort.Direction.DESC) Pageable pageable
 
     ) {
 
         return ResponseEntity.ok(agendamentoService.listarEntreDatas(
                 LocalDateTime.parse(inicio, DateTimeFormatter.ISO_DATE_TIME),
-                LocalDateTime.parse(fim, DateTimeFormatter.ISO_DATE_TIME), usuario));
+                LocalDateTime.parse(fim, DateTimeFormatter.ISO_DATE_TIME), usuario, pageable));
     }
 
     @PutMapping("/{id}")
