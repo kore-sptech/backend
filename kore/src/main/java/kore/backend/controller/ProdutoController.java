@@ -14,6 +14,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+
 import java.util.List;
 
 @RestController
@@ -47,12 +52,13 @@ public class ProdutoController {
             @ApiResponse(responseCode = "503", description = "Erro ao acessar o banco")
     })
     @GetMapping("/{fkUsuario}")
-    public ResponseEntity<List<Produto>> listrarProdutos(
-            @PathVariable Long fkUsuario
+    public ResponseEntity<Page<Produto>> listrarProdutos(
+            @PathVariable Long fkUsuario,
+             @PageableDefault(size = 10, sort = { "nome", "id" }, direction = Sort.Direction.ASC) Pageable pageable
     ) {
         try {
             // O serviço precisará ser atualizado para receber o fkUsuario
-            List<Produto> p = produtoService.listarTodosProdutos(fkUsuario);
+            Page<Produto> p = produtoService.listarTodosProdutos(fkUsuario, pageable);
             if (p.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }

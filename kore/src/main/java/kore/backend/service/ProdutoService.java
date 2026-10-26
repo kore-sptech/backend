@@ -11,6 +11,8 @@ import kore.backend.service.validation.CategoriaValidationService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -75,9 +77,9 @@ public class ProdutoService {
         }
     }
 
-    public List<Produto> listarTodosProdutos(Long fkUsuario) {
+    public Page<Produto> listarTodosProdutos(Long fkUsuario, Pageable pageable) {
         produtoPolicy.validarUsuario(fkUsuario);
-        return produtoRepository.findAllByFkUsuario(fkUsuario);
+        return produtoRepository.findAllByFkUsuario(fkUsuario, pageable);
     }
 
     @Transactional
