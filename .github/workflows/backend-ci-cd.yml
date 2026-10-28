@@ -1,0 +1,97 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  KORE_IMAGE: henryfranz/kore-back-end-main
+  NOTIFICATION_IMAGE: henryfranz/kore-back-end-notification
+
+jobs:
+  kore:
+    name: Build & Push - kore
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Compilar (pulando testes)
+        working-directory: kore
+        run: mvn -B clean package -DskipTests
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login no Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build e push da imagem Docker
+        uses: docker/build-push-action@v6
+        with:
+          context: ./kore
+          file: ./kore/Dockerfile
+          target: prod
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.KORE_IMAGE }}:latest
+            ${{ env.KORE_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=kore
+          cache-to: type=gha,mode=max,scope=kore
+
+  notification:
+    name: Build & Push - notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Compilar (pulando testes)
+        working-directory: notification
+        run: mvn -B clean package -DskipTests
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login no Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build e push da imagem Docker
+        uses: docker/build-push-action@v6
+        with:
+          context: ./notification
+          file: ./notification/Dockerfile
+          target: prod
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.NOTIFICATION_IMAGE }}:latest
+            ${{ env.NOTIFICATION_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=notification
+          cache-to: type=gha,mode=max,scope=notification
