@@ -1,5 +1,6 @@
 package kore.backend.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class Transacao {
     @Column(name = "idTransacao")
     private Long id;
 
-    private Double valor;
+    private BigDecimal valor;
 
     private String nome;
 

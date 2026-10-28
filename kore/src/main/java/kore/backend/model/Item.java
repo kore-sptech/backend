@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 @Getter
 @Setter
@@ -24,7 +25,7 @@ public class Item {
     private LocalDateTime dataValidade;
 
     @Column(name = "vl_unitario")
-    private Float valorUnitario;
+    private BigDecimal valorUnitario;
 
     @Column(name = "dt_saida")
     private LocalDateTime dataSaida;

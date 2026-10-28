@@ -4,8 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import kore.backend.model.enums.CategoriaTransacao;
 import kore.backend.model.enums.TipoTransacao;
 
+import java.math.BigDecimal;
+
 public record TransacaoDTO(
-        @NotBlank(message = "O valor da transação é obrigatório") Double valor,
+        @NotBlank(message = "O valor da transação é obrigatório") BigDecimal valor,
         @NotBlank(message = "O nome da transação é obrigatório") String nome,
         @NotBlank(message = "O tipo da transação é obrigatório") TipoTransacao tipo,
         @NotBlank(message = "A categoria da transação é obrigatória") CategoriaTransacao categoria) {

@@ -1,5 +1,6 @@
 package kore.backend.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class AgendamentoRequestDTO {
 
     @Positive(message = "O preço deve ser um valor positivo")
     @NotNull(message = "O preço é obrigatório")
-    private Double preco;
+    private BigDecimal preco;
 
     @NotBlank(message = "O nome do cliente é obrigatório")
     private String cliente;

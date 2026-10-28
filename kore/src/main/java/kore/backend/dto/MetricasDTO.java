@@ -1,30 +1,31 @@
 package kore.backend.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import kore.backend.model.enums.CategoriaTransacao;
 
 public record MetricasDTO(
-                Double totalEntradas,
-                Double totalSaidas,
-                Double saldoAtual,
+                BigDecimal totalEntradas,
+                BigDecimal totalSaidas,
+                BigDecimal saldoAtual,
                 CategoriaTransacao principalGasto,
                 List<GastoPorCategoria> gastosPorCategoria,
-                Double faturamentoBruto,
-                Double previsaoProximoMes,
-                Double variacaoPercentual,
+                BigDecimal faturamentoBruto,
+                BigDecimal previsaoProximoMes,
+                BigDecimal variacaoPercentual,
                 MetricasMesPassado mesPassado) {
 
         public record MetricasMesPassado(
-                        Double variacaoReceita,
-                        Double variacaoDespesa
+                        BigDecimal variacaoReceita,
+                        BigDecimal variacaoDespesa
 
         ) {
         }
 
         public record GastoPorCategoria(
                         CategoriaTransacao categoria,
-                        Double valor, Double percentual) {
+                        BigDecimal valor, BigDecimal percentual) {
         }
 
         @Override

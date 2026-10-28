@@ -6,6 +6,7 @@ import kore.backend.model.enums.FormaPagamento;
 import kore.backend.model.enums.StatusAgendamento;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Collections;
@@ -14,7 +15,7 @@ import java.util.Collections;
 public class AgendamentoResponseDTO {
     private Long id;
 
-    private Double preco;
+    private BigDecimal preco;
 
     private String cliente;
 

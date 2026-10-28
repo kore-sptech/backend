@@ -1,5 +1,6 @@
 package kore.backend.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -29,7 +30,7 @@ public interface TransacaoRepository extends JpaRepository<Transacao, Long>, Jpa
         // 1. Soma de valor por tipo e período — elimina o findAll e os streams de soma
         @Query("SELECT SUM(t.valor) FROM Transacao t WHERE t.usuario = :usuario " +
                         "AND t.tipo = :tipo AND t.dataCriacao >= :inicio AND t.dataCriacao < :fim")
-        Double sumValorByUsuarioAndTipoAndPeriodo(
+        BigDecimal sumValorByUsuarioAndTipoAndPeriodo(
                         @Param("usuario") Usuario usuario,
                         @Param("tipo") TipoTransacao tipo,
                         @Param("inicio") LocalDateTime inicio,

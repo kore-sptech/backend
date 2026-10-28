@@ -1,5 +1,7 @@
 package kore.backend.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -73,17 +75,17 @@ public class TransacaoService {
                 LocalDateTime inicioMesAnterior = inicioMesAtual.minusMonths(1);
 
                 // ── Totais do mês atual via query agregada (sem findAll) ─────────────────
-                Double totalEntradas = Optional.ofNullable(
+                BigDecimal totalEntradas = Optional.ofNullable(
                                 transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
                                                 usuario, TipoTransacao.ENTRADA, inicioMesAtual, inicioProximoMes))
-                                .orElse(0.0);
+                                .orElse(BigDecimal.ZERO);
 
-                Double totalSaidas = Optional.ofNullable(
+                BigDecimal totalSaidas = Optional.ofNullable(
                                 transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
                                                 usuario, TipoTransacao.SAIDA, inicioMesAtual, inicioProximoMes))
-                                .orElse(0.0);
+                                .orElse(BigDecimal.ZERO);
 
-                Double saldoAtual = totalEntradas - totalSaidas;
+                BigDecimal saldoAtual = totalEntradas.subtract(totalSaidas);
 
                 // ── Gastos por categoria do mês atual via query agrupada ─────────────────
                 List<Object[]> rawGastos = transacaoRepository
@@ -92,16 +94,16 @@ public class TransacaoService {
                 List<MetricasDTO.GastoPorCategoria> gastosPorCategoria = rawGastos.stream()
                                 .map(row -> {
                                         CategoriaTransacao categoria = (CategoriaTransacao) row[0];
-                                        Double valor = ((Number) row[1]).doubleValue();
-                                        Double percentual = totalSaidas > 0.0
-                                                        ? (valor / totalSaidas) * 100
-                                                        : 0.0;
+                                        BigDecimal valor = ((BigDecimal) row[1]);
+                                        BigDecimal percentual = totalSaidas.compareTo(BigDecimal.ZERO) > 0
+                                                        ? (valor.divide(totalSaidas)).multiply(new BigDecimal(100))
+                                                        : BigDecimal.ZERO;
                                         return new MetricasDTO.GastoPorCategoria(categoria, valor, percentual);
                                 })
                                 .collect(Collectors.toList());
 
                 CategoriaTransacao principalGasto = gastosPorCategoria.stream()
-                                .max(Comparator.comparingDouble(MetricasDTO.GastoPorCategoria::valor))
+                                .max(Comparator.comparing(MetricasDTO.GastoPorCategoria::valor))
                                 .map(MetricasDTO.GastoPorCategoria::categoria)
                                 .orElse(null);
 
@@ -110,35 +112,35 @@ public class TransacaoService {
                 List<Agendamento> agendamentos = this.agendamentoRepository
                                 .findByInicioBetweenAndUsuario(inicioMesAtual, inicioProximoMes, usuario);
 
-                Double faturamentoDeAgendamentos = agendamentos.stream()
+                BigDecimal faturamentoDeAgendamentos = agendamentos.stream()
                                 .filter(a -> !a.getStatus().equals(StatusAgendamento.CANCELADO))
-                                .mapToDouble(a -> a.getPreco() != null ? a.getPreco() : 0.0)
-                                .sum();
+                                .map(a -> a.getPreco() != null ? a.getPreco() : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                Double faturamentoBruto = faturamentoDeAgendamentos;
+                BigDecimal faturamentoBruto = faturamentoDeAgendamentos;
 
                 // ── Previsão do próximo mês via agendamentos ─────────────────────────────
                 LocalDateTime fimProximoMes = inicioProximoMes.plusMonths(1);
-                Double previsaoProximoMes = agendamentoRepository
+                BigDecimal previsaoProximoMes = agendamentoRepository
                                 .findByInicioBetween(inicioProximoMes, fimProximoMes)
                                 .stream()
-                                .mapToDouble(a -> a.getPreco() != null ? a.getPreco() : 0.0)
-                                .sum();
+                                .map(a -> a.getPreco() != null ? a.getPreco() : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 // ── Totais do mês anterior para comparação ───────────────────────────────
-                Double entradasMesAnterior = Optional.ofNullable(
+                BigDecimal entradasMesAnterior = Optional.ofNullable(
                                 transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
                                                 usuario, TipoTransacao.ENTRADA, inicioMesAnterior, inicioMesAtual))
-                                .orElse(0.0);
+                                .orElse(BigDecimal.ZERO);
 
-                Double saidasMesAnterior = Optional.ofNullable(
+                BigDecimal saidasMesAnterior = Optional.ofNullable(
                                 transacaoRepository.sumValorByUsuarioAndTipoAndPeriodo(
                                                 usuario, TipoTransacao.SAIDA, inicioMesAnterior, inicioMesAtual))
-                                .orElse(0.0);
+                                .orElse(BigDecimal.ZERO);
 
                 // ── Variações percentuais (Regra 1: variacaoPercentual == variacaoReceita)
-                Double variacaoReceita = calcularVariacao(totalEntradas, entradasMesAnterior);
-                Double variacaoDespesa = calcularVariacao(totalSaidas, saidasMesAnterior);
+                BigDecimal variacaoReceita = calcularVariacao(totalEntradas, entradasMesAnterior);
+                BigDecimal variacaoDespesa = calcularVariacao(totalSaidas, saidasMesAnterior);
 
                 MetricasDTO.MetricasMesPassado mesPassado = new MetricasDTO.MetricasMesPassado(variacaoReceita,
                                 variacaoDespesa);
@@ -159,11 +161,14 @@ public class TransacaoService {
                 transacaoValidationService.validarValor(transacao);
         }
 
-        private Double calcularVariacao(Double valorAtual, Double valorAnterior) {
-                if (valorAnterior == null || valorAnterior == 0.0) {
-                        return (valorAtual == null || valorAtual == 0.0) ? 0.0 : 100.0;
+        private BigDecimal calcularVariacao(BigDecimal valorAtual, BigDecimal valorAnterior) {
+                if (valorAnterior == null || valorAnterior.compareTo(BigDecimal.ZERO) == 0) {
+                        return (valorAtual == null || valorAtual.compareTo(BigDecimal.ZERO) == 0) ? BigDecimal.ZERO : BigDecimal.valueOf(100);
                 }
-                return ((valorAtual - valorAnterior) / valorAnterior) * 100;
+                return valorAtual
+                        .subtract(valorAnterior)
+                        .divide(valorAnterior, 2, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
         }
 
         @Transactional
