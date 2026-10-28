@@ -5,12 +5,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import kore.backend.messaging.NotificationMessage;
+import kore.backend.messaging.NotificationOutboxService;
 import kore.backend.model.Usuario;
 import kore.backend.model.enums.StatusAgendamento;
 import kore.backend.repository.FotoRepository;
 import kore.backend.repository.ItemRepository;
 
 import kore.backend.repository.TransacaoRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +28,7 @@ import kore.backend.repository.AgendamentoRepository;
 import kore.backend.service.policy.AgendamentoPolicy;
 import kore.backend.service.validation.AgendamentoValidationService;
 
+@Slf4j
 @Service
 public class AgendamentoService {
 
@@ -33,18 +38,24 @@ public class AgendamentoService {
     private final TransacaoRepository transacaoRepository;
     private final AgendamentoValidationService agendamentoValidationService;
     private final AgendamentoPolicy agendamentoPolicy;
+    private final NotificationOutboxService notificationOutboxService;
+
+    @Value("${app.rabbitmq.routing-key.appointment}")
+    private String appointmentRoutingKey;
 
     private static final Duration DURACAO_PADRAO = Duration.ofMinutes(30);
 
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FotoRepository fotoRepository,
             ItemRepository itemRepository, TransacaoRepository transacaoRepository,
-            AgendamentoValidationService agendamentoValidationService, AgendamentoPolicy agendamentoPolicy) {
+            AgendamentoValidationService agendamentoValidationService, AgendamentoPolicy agendamentoPolicy,
+            NotificationOutboxService notificationOutboxService) {
         this.agendamentoRepository = agendamentoRepository;
         this.fotoRepository = fotoRepository;
         this.itemRepository = itemRepository;
         this.transacaoRepository = transacaoRepository;
         this.agendamentoValidationService = agendamentoValidationService;
         this.agendamentoPolicy = agendamentoPolicy;
+        this.notificationOutboxService = notificationOutboxService;
     }
 
     @Transactional
@@ -170,6 +181,31 @@ public class AgendamentoService {
         agendamentoPolicy.validarCancelamento(agendamento);
         agendamento.setStatus(StatusAgendamento.CANCELADO);
         this.agendamentoRepository.save(agendamento);
+
+        NotificationMessage msg = new NotificationMessage(
+                "appointment-cancelled:" + agendamento.getId(),
+                1,
+                "APPOINTMENT_CANCELLED",
+                "Agendamento cancelado",
+                String.format("O agendamento do cliente %s foi cancelado.", agendamento.getCliente()),
+                "APPOINTMENT",
+                "WARNING",
+                agendamento.getId(),
+                agendamento.getCliente(),
+                agendamento.getInicio(),
+                null,
+                agendamento.getUsuario() != null ? agendamento.getUsuario().getId() : null,
+                null,
+                null,
+                null,
+                "ATENCAO",
+                "APPOINTMENT",
+                agendamento.getId(),
+                "VER_AGENDAMENTO"
+        );
+        notificationOutboxService.enqueue(msg, appointmentRoutingKey);
+        log.info("[NOTIF-EMIT-KORE] Notificação de agendamento cancelado emitida | EventId: {} | Agendamento ID: {} | Cliente: {}",
+                msg.eventId(), agendamento.getId(), agendamento.getCliente());
     }
 
     public HorarioDisponivelDTO proximoDisponivel(Usuario usuario) {

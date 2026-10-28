@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Component
 @RequiredArgsConstructor
@@ -37,9 +36,35 @@ public class AgendamentoScheduler {
         agendamentoRepository
                 .findByInicioBetweenAndStatus(agora, janelaFim, StatusAgendamento.PENDENTE)
                 .forEach(agendamento -> {
-                   
+                    // Mantém evento in-process para SSE direto no kore
                     eventPublisher.publishEvent(new AgendamentoProximoEvent(this, agendamento.getId()));
-                    log.info("Evento de notificação enfileirado para agendamento ID: {}", agendamento.getId());
+
+                    // Enfileira na outbox para persistência via RabbitMQ no microsserviço de notificações
+                    NotificationMessage msg = new NotificationMessage(
+                            "appointment-upcoming:" + agendamento.getId(),
+                            1,
+                            "APPOINTMENT_UPCOMING",
+                            "Próxima Sessão: " + agendamento.getCliente(),
+                            String.format("Sessão agendada para as %tT.", agendamento.getInicio()),
+                            "APPOINTMENT",
+                            "INFO",
+                            agendamento.getId(),
+                            agendamento.getCliente(),
+                            agendamento.getInicio(),
+                            null,
+                            agendamento.getUsuario() != null ? agendamento.getUsuario().getId() : null,
+                            null,
+                            null,
+                            null,
+                            "INFORMATIVO",
+                            "APPOINTMENT",
+                            agendamento.getId(),
+                            "VER_AGENDAMENTO"
+                    );
+                    notificationOutboxService.enqueue(msg, appointmentRoutingKey);
+
+                    log.info("[NOTIF-EMIT-KORE] Notificação de agendamento próximo emitida | EventId: {} | Agendamento ID: {} | Cliente: {} | Horário: {}",
+                            msg.eventId(), agendamento.getId(), agendamento.getCliente(), agendamento.getInicio());
                 });
     }
 

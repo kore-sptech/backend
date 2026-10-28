@@ -17,6 +17,7 @@ import kore.backend.repository.ItemRepository;
 import kore.backend.model.Produto;
 import kore.backend.repository.ProdutoRepository;
 import kore.backend.service.validation.ItemValidationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class ItemService {
     private final ItemRepository itemRepository;
@@ -116,21 +118,18 @@ public class ItemService {
     }
 
     private void verificarTransicaoEstoque(Produto produto, long quantidadeAnterior) {
-        Integer limite = produto.getQtdMinAlerta();
-        if (limite == null) {
-            return;
-        }
+        Integer limite = produto.getQtdMinAlerta() != null ? produto.getQtdMinAlerta() : 5;
 
         long quantidadeAtual = itemRepository.contarItensAtivosPorProduto(produto.getId());
         if (quantidadeAnterior <= limite || quantidadeAtual > limite) {
             return;
         }
 
-        notificationOutboxService.enqueue(new NotificationMessage(
+        NotificationMessage msg = new NotificationMessage(
                 "stock-below-threshold:" + UUID.randomUUID(),
                 1,
                 "STOCK_BELOW_THRESHOLD",
-                "Estoque baixo",
+                "Estoque crítico: " + produto.getNome(),
                 String.format("O produto %s atingiu %d itens disponíveis (limite: %d).",
                         produto.getNome(), quantidadeAtual, limite),
                 "STOCK",
@@ -142,8 +141,14 @@ public class ItemService {
                 produto.getFkUsuario(),
                 produto.getNome(),
                 Math.toIntExact(quantidadeAtual),
-                limite),
-                stockRoutingKey);
+                limite,
+                "CRITICO",
+                "STOCK",
+                produto.getId(),
+                "REGISTRAR_PRODUTO");
+        notificationOutboxService.enqueue(msg, stockRoutingKey);
+        log.info("[NOTIF-EMIT-KORE] Notificação de estoque abaixo do limite emitida | EventId: {} | Produto ID: {} | Produto: {} | Qtd Atual: {} | Limite: {}",
+                msg.eventId(), produto.getId(), produto.getNome(), quantidadeAtual, limite);
     }
 
     @Transactional

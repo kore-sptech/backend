@@ -47,7 +47,7 @@ public class ProdutoController {
             @ApiResponse(responseCode = "503", description = "Erro ao acessar o banco")
     })
     @GetMapping("/{fkUsuario}")
-    public ResponseEntity<List<Produto>> listrarProdutos(
+    public ResponseEntity<List<Produto>> listarProdutos(
             @PathVariable Long fkUsuario
     ) {
         try {

@@ -1,5 +1,9 @@
 package kore.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import kore.backend.config.OpenApiConfig;
 import kore.backend.dto.AgendamentoRequestDTO;
 import kore.backend.dto.AgendamentoResponseDTO;
@@ -20,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/agendamentos")
-//@CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Agendamentos", description = "Gestão de agendamentos, horários e status")
 @SecurityRequirement(name = OpenApiConfig.SECURITY_SCHEMA_NAME)
 public class AgendamentoController {
 
@@ -30,6 +34,11 @@ public class AgendamentoController {
         this.agendamentoService = agendamentoService;
     }
 
+    @Operation(summary = "Listar agendamentos", description = "Lista agendamentos entre datas informadas para o usuário logado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Agendamentos listados com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Parâmetros de data inválidos")
+    })
     @GetMapping
     public ResponseEntity<List<AgendamentoResponseDTO>> listar(
             @RequestParam(name = "inicio", required = false) String inicio,
@@ -43,18 +52,34 @@ public class AgendamentoController {
                 LocalDateTime.parse(fim, DateTimeFormatter.ISO_DATE_TIME), usuario));
     }
 
+    @Operation(summary = "Atualizar agendamento", description = "Atualiza os dados de um agendamento existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Agendamento atualizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "404", description = "Agendamento não encontrado")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<Agendamento> atualizar(@PathVariable Long id,
             @Valid @RequestBody AgendamentoRequestDTO agendamento, @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(agendamentoService.atualizar(id, agendamento, usuario));
     }
 
+    @Operation(summary = "Criar agendamento", description = "Cria um novo agendamento para o usuário logado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Agendamento criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos")
+    })
     @PostMapping
     public ResponseEntity<Agendamento> criar(@Valid @RequestBody AgendamentoRequestDTO agendamento,
             @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(agendamentoService.criar(agendamento, usuario));
     }
 
+    @Operation(summary = "Confirmar agendamento", description = "Marca o agendamento como confirmado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Confirmado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Agendamento não encontrado")
+    })
     @PatchMapping("/confirmar/{agendamentoId}")
     public ResponseEntity<Void> confirmar(
             @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario) {
@@ -62,6 +87,11 @@ public class AgendamentoController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Confirmar pagamento do agendamento", description = "Marca o pagamento do agendamento como confirmado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Pagamento confirmado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Agendamento não encontrado")
+    })
     @PatchMapping("/confirmar_pagamento/{agendamentoId}")
     public ResponseEntity<Void> confirmarPagamento(
             @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario) {
@@ -69,6 +99,11 @@ public class AgendamentoController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Cancelar agendamento", description = "Cancela um agendamento existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Cancelado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Agendamento não encontrado")
+    })
     @PatchMapping("/cancelar/{agendamentoId}")
     public ResponseEntity<Void> cancelar(
             @PathVariable Long agendamentoId, @AuthenticationPrincipal Usuario usuario) {
@@ -76,6 +111,11 @@ public class AgendamentoController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Próximo horário disponível", description = "Retorna o próximo horário disponível para agendamento")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horário retornado com sucesso"),
+            @ApiResponse(responseCode = "204", description = "Nenhum horário disponível encontrado")
+    })
     @GetMapping("/proximo-disponivel")
     public ResponseEntity<HorarioDisponivelDTO> proximoDisponivel(
             @AuthenticationPrincipal Usuario usuario) {

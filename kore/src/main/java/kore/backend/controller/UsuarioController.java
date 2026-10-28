@@ -12,13 +12,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/usuarios")
-//@CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Usuários", description = "Gerenciamento de cadastro e perfis de usuários")
 public class UsuarioController {
     private final UsuarioService usuarioService;
 
@@ -26,6 +30,11 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
+    @Operation(summary = "Cadastrar usuário", description = "Cadastra um novo usuário no sistema")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Usuário cadastrado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos")
+    })
     @PostMapping
     @SecurityRequirements
     public ResponseEntity<UsuarioResponseDTO> cadastrar(@RequestBody @Valid UsuarioDTO usuarioDTO) {
@@ -35,6 +44,12 @@ public class UsuarioController {
                 .body(UsuarioMapper.toResponse(p));
     }
 
+    @Operation(summary = "Buscar usuário por ID", description = "Retorna os dados do usuário pelo ID (requer autenticação e que seja o próprio usuário)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> buscar(
             @PathVariable Long id, Authentication authentication) {
@@ -48,12 +63,24 @@ public class UsuarioController {
         return ResponseEntity.ok(UsuarioMapper.toResponse(p));
     }
 
+    @Operation(summary = "Listar todos os usuários", description = "Retorna uma lista com todos os usuários cadastrados")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuários listados com sucesso"),
+            @ApiResponse(responseCode = "204", description = "Nenhum usuário cadastrado")
+    })
     @GetMapping()
     public ResponseEntity<List<UsuarioResponseDTO>> buscartodos() {
         List<Usuario> p = usuarioService.buscartodos();
         return ResponseEntity.ok(UsuarioMapper.toResponseList(p));
     }
 
+    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> atualizar(
             @PathVariable Long id,
@@ -69,6 +96,12 @@ public class UsuarioController {
         return ResponseEntity.ok(UsuarioMapper.toResponse(p));
     }
 
+    @Operation(summary = "Deletar usuário", description = "Remove um usuário do sistema pelo ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Usuário deletado com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(
             @PathVariable Long id,

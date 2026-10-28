@@ -15,12 +15,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import kore.backend.model.Usuario;
 
 @RestController
 @RequestMapping("/auth")
-//@CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Autenticação", description = "Endpoints de autenticação e obtenção de token JWT")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -31,6 +35,11 @@ public class AuthController {
         this.tokenService = tokenService;
     }
 
+    @Operation(summary = "Realizar login", description = "Autentica o usuário com email e senha e retorna o token JWT")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Login realizado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Email ou senha inválidos")
+    })
     @PostMapping("/login")
     @SecurityRequirements
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO, HttpServletRequest request) {
