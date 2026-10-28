@@ -2,7 +2,6 @@ package kore.notification.entities.valueObject;
 
 public enum NotificationType {
     APPOINTMENT,
-    APPOIMENTMENT,
     PAYMENT,
     STOCK;
 

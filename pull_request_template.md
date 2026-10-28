@@ -1,7 +1,15 @@
-## Como reproduzir o bug?
-Descrever rapidamente como ocorre o bug e qual foi a solução criada.
+### <tipo>: <título descritivo>
+---
 
-## Checklist
-- [ ] Eu adicionei|atualizei|corrigi os testes unitários do projeto (Se aplicável);
-- [ ] Sem erros ou avisos no console após minha alteração;
-- [ ] Tirei prints do antes e depois da correção do problema.[adicionar a screenshot]
+### 📝 Descrição do PR
+[Descrever rapidamente o propósito do PR e o problema ou melhoria resolvida]
+
+#### 🔍 O que foi alterado:
+1. **[Módulo / Componente]:**
+   - [Descrever detalhadamente a alteração realizada]
+
+---
+
+### 🧪 Como Testar
+1. [Passo 1 para reproduzir/testar]
+2. [Passo 2 para validar o comportamento]

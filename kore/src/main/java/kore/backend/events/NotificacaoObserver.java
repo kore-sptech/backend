@@ -63,20 +63,20 @@ public class NotificacaoObserver {
             return null;
         }
 
-        long minutosRestantes = LocalDateTime.now()
-                .until(agendamento.getInicio(), ChronoUnit.MINUTES);
-
         String mensagem = String.format(
-                "Agendamento de %s começa em %d minutos.",
-                agendamento.getCliente(),
-                minutosRestantes
+                "Sessão agendada para as %tT.",
+                agendamento.getInicio()
         );
 
         Notificacao notificacao = Notificacao.builder()
-                .titulo("Agendamento Próximo")
+                .titulo("Próxima Sessão: " + agendamento.getCliente())
                 .mensagem(mensagem)
                 .agendamento(agendamento)
                 .tipo(TipoNotificacao.NORMAL)
+                .severidade("INFORMATIVO")
+                .entidadeTipo("APPOINTMENT")
+                .entidadeId(agendamento.getId())
+                .acaoTipo("VER_AGENDAMENTO")
                 .build();
 
         notificacaoRepository.save(notificacao);

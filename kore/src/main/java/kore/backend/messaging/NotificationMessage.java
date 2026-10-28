@@ -17,5 +17,9 @@ public record NotificationMessage(
         Long userId,
         String productName,
         Integer availableQuantity,
-        Integer threshold) {
+        Integer threshold,
+        String severidade,
+        String entidadeTipo,
+        Long entidadeId,
+        String acaoTipo) {
 }

@@ -31,7 +31,7 @@ public class NotificationConsumer {
                 || !StringUtils.hasText(event.level())) {
             throw new IllegalArgumentException("Evento de notificação inválido");
         }
-        if ("APPOINTMENT_UPCOMING".equals(event.eventType())) {
+        if ("APPOINTMENT_UPCOMING".equals(event.eventType()) || "APPOINTMENT_CANCELLED".equals(event.eventType())) {
             if (event.appointmentId() == null || !"APPOINTMENT".equals(event.type())) {
                 throw new IllegalArgumentException("Evento de agendamento inválido");
             }
@@ -42,14 +42,21 @@ public class NotificationConsumer {
                     || !"STOCK".equals(event.type())) {
                 throw new IllegalArgumentException("Evento de estoque inválido");
             }
+        } else if ("ITEM_EXPIRING_SOON".equals(event.eventType()) || "ITEM_EXPIRED_ACTIVE".equals(event.eventType())) {
+            if (event.productId() == null || !"STOCK".equals(event.type())) {
+                throw new IllegalArgumentException("Evento de validade de estoque inválido");
+            }
         } else {
             throw new IllegalArgumentException("Tipo de evento desconhecido: " + event.eventType());
         }
 
         if (notificationRepository.existsBySourceEventId(event.eventId())) {
-            log.info("Evento {} já processado; ignorando reentrega.", event.eventId());
+            log.info("[NOTIF-CONSUME] Evento {} já processado; ignorando reentrega.", event.eventId());
             return;
         }
+
+        log.info("[NOTIF-CONSUME] Evento de notificação recebido e consumido | EventId: {} | EventType: {} | Título: {} | Mensagem: {}",
+                event.eventId(), event.eventType(), event.title(), event.message());
 
         emitNotificationUseCase.execute(new NotificationRequest(
                 event.title(),
@@ -57,7 +64,7 @@ public class NotificationConsumer {
                 event.type(),
                 event.level(),
                 event.eventId()));
-        log.info("Notificação persistida para evento {}", event.eventId());
+        log.info("[NOTIF-CONSUME] Notificação persistida com sucesso para evento {}", event.eventId());
     }
 
 }

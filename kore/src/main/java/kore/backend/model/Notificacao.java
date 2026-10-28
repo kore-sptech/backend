@@ -26,6 +26,11 @@ public class Notificacao {
 
     private boolean lida = false;
 
+    private String severidade; // CRITICO, ATENCAO, INFORMATIVO
+    private String entidadeTipo; // APPOINTMENT, STOCK, etc.
+    private Long entidadeId;
+    private String acaoTipo; // REGISTRAR_PRODUTO, VER_AGENDAMENTO, etc.
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agendamento_fk")
     @JsonIgnore

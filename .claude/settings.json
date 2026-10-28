@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn test *)",
+      "Bash(./mvnw -q compile)",
+      "Bash(mvn -q compile)",
+      "Bash(mvn -q test-compile)",
+      "Bash(npm run *)",
+      "Bash(npx eslint *)",
+      "Bash(grep -vE \"^\\\\s*$\")",
+      "Bash(awk -F: '{print $1}')",
+      "Bash(grep -E \"^\\\\s+/home/henry/Projetos/Faculdade/kore-sptech/front-end/src/.*\\\\.jsx?$\")",
+      "Bash(grep -E \"^\\\\s+/home/henry.*\\\\.jsx$|^   [0-9]+:[0-9]+\")",
+      "Bash(grep -E \"^/home/henry.*\\\\.jsx$\")",
+      "Bash(grep -E \"\\\\.jsx$|error|warning|problems\")",
+      "Bash(grep -v \"^$\")",
+      "Bash(grep -vE \"^\\\\s{2,}\\\\.jsx\")",
+      "Bash(echo \"errorHandler exit: $?\")",
+      "Bash(grep -vE \"^\\\\s{3,}\")"
+    ]
+  },
+  "version": "1.0.0",
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://rud8m8p.abc-tunnel.us/v1",
+    "ANTHROPIC_API_KEY": "sk-8c791408f10944e4-o2o04u-95c20d70"
+  },
+  "model": "ag/claude-sonnet-4-6"
+}
