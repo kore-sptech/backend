@@ -36,6 +36,11 @@ public class Notificacao {
     @JsonIgnore
     private Agendamento agendamento;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fk_usuario")
+    @JsonIgnore
+    private Usuario usuario;
+
     @Enumerated(EnumType.STRING)
     private TipoNotificacao tipo;
 

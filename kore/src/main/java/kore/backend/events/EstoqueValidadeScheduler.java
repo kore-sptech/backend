@@ -92,7 +92,7 @@ public class EstoqueValidadeScheduler {
                     1,
                     "ITEM_EXPIRED_ACTIVE",
                     "Estoque Crítico: " + nomeProduto,
-                    String.format("O estoque de %s atingiu o nível mínimo. Restam apenas %d unidades.",
+                    String.format("O produto %s tem %d unidade(s) VENCIDA(S) ainda ativa(s). Remova-as imediatamente.",
                             nomeProduto, itens.size()),
                     "STOCK",
                     "ERROR",

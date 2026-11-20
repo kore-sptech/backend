@@ -75,6 +75,9 @@ public class Produto {
     }
 
     public void adicionarEstoque(List<Item> itens) {
-        itens.forEach(item -> itens.add(item));
+        if (itens == null) {
+            return;
+        }
+        this.itens.addAll(itens);
     }
 }

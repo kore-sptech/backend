@@ -5,8 +5,8 @@ import kore.backend.model.enums.*;
 import kore.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.Random;
 
 @Component
+@Profile("dev")
 @RequiredArgsConstructor
 @Slf4j
 public class DatabaseSeeder implements CommandLineRunner {
@@ -59,7 +60,6 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         log.info("Iniciando povoamento do banco de dados com dados coesos fornecidos para estúdio de tatuagem...");
 
-        Faker faker = new Faker(new Locale("pt", "BR"));
         Random random = new Random();
 
         // 2. Criar Categorias
@@ -272,8 +272,17 @@ public class DatabaseSeeder implements CommandLineRunner {
                     break;
                 }
 
-                String cliente = faker.name().fullName();
-                String telefone = faker.phoneNumber().cellPhone();
+                List<String> primeirosNomes = List.of(
+                        "Lucas", "Mariana", "Gabriel", "Beatriz", "Felipe", "Camila",
+                        "Rodrigo", "Juliana", "Matheus", "Larissa", "Thiago", "Amanda",
+                        "Bruno", "Fernanda", "Leonardo", "Bruna", "Gustavo", "Carolina"
+                );
+                List<String> sobrenomes = List.of(
+                        "Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira",
+                        "Alves", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins"
+                );
+                String cliente = primeirosNomes.get(random.nextInt(primeirosNomes.size())) + " " + sobrenomes.get(random.nextInt(sobrenomes.size()));
+                String telefone = String.format("(11) 9%04d-%04d", 1000 + random.nextInt(9000), 1000 + random.nextInt(9000));
 
                 AgendamentoRef ref = referenciasAgendamento.get(random.nextInt(referenciasAgendamento.size()));
                 String servico = ref.servico;
@@ -346,6 +355,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .entidadeTipo("STOCK")
                         .entidadeId(p.getId())
                         .acaoTipo("REGISTRAR_PRODUTO")
+                        .usuario(usuario)
                         .lida(false)
                         .build());
             } else if (i % 3 == 1) {
@@ -357,6 +367,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .entidadeTipo("STOCK")
                         .entidadeId(p.getId())
                         .acaoTipo("VER_ITEM")
+                        .usuario(usuario)
                         .lida(false)
                         .build());
             } else {
@@ -369,6 +380,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .entidadeId(a.getId())
                         .acaoTipo("VER_AGENDAMENTO")
                         .agendamento(a)
+                        .usuario(usuario)
                         .lida(false)
                         .build());
             }

@@ -39,6 +39,7 @@ public class AgendamentoService {
     private final AgendamentoValidationService agendamentoValidationService;
     private final AgendamentoPolicy agendamentoPolicy;
     private final NotificationOutboxService notificationOutboxService;
+    private final S3StorageService s3StorageService;
 
     @Value("${app.rabbitmq.routing-key.appointment}")
     private String appointmentRoutingKey;
@@ -48,7 +49,7 @@ public class AgendamentoService {
     public AgendamentoService(AgendamentoRepository agendamentoRepository, FotoRepository fotoRepository,
             ItemRepository itemRepository, TransacaoRepository transacaoRepository,
             AgendamentoValidationService agendamentoValidationService, AgendamentoPolicy agendamentoPolicy,
-            NotificationOutboxService notificationOutboxService) {
+            NotificationOutboxService notificationOutboxService, S3StorageService s3StorageService) {
         this.agendamentoRepository = agendamentoRepository;
         this.fotoRepository = fotoRepository;
         this.itemRepository = itemRepository;
@@ -56,6 +57,7 @@ public class AgendamentoService {
         this.agendamentoValidationService = agendamentoValidationService;
         this.agendamentoPolicy = agendamentoPolicy;
         this.notificationOutboxService = notificationOutboxService;
+        this.s3StorageService = s3StorageService;
     }
 
     @Transactional
@@ -91,11 +93,10 @@ public class AgendamentoService {
 
         List<Foto> fotos = this.fotoRepository.findAllByAgendamento(agendamento);
 
-        for (Foto foto : fotos)
-            // this.s3StorageService.delete(foto.getNome());
-
+        for (Foto foto : fotos) {
+            this.s3StorageService.delete(foto.getNome());
+        }
         this.fotoRepository.deleteAll(fotos);
-        this.fotoRepository.deleteAllByAgendamento(agendamento);
 
         this.agendamentoRepository.delete(agendamento);
     }

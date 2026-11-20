@@ -12,53 +12,72 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Service
 public class ServerSentEventService {
 
-    private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
+    private final ConcurrentHashMap<Long, List<SseEmitter>> emittersByUser = new ConcurrentHashMap<>();
 
-    // ── Conexão ───────────────────────────────────────────────────────────────
+    // ── Conexão por usuário ───────────────────────────────────────────────────
 
-    public SseEmitter connect() {
+    public SseEmitter connect(Long usuarioId) {
         SseEmitter emitter = new SseEmitter(180_000L);
-        emitters.add(emitter);
+        emittersByUser.computeIfAbsent(usuarioId, k -> new CopyOnWriteArrayList<>()).add(emitter);
 
         emitter.onCompletion(() -> {
-            log.info("Emitter completado. Removendo da lista.");
-            emitters.remove(emitter);
+            log.info("Emitter completado para usuário {}. Removendo.", usuarioId);
+            removeEmitter(usuarioId, emitter);
         });
 
         emitter.onTimeout(() -> {
-            log.info("Emitter expirado. Removendo.");
+            log.info("Emitter expirado para usuário {}. Removendo.", usuarioId);
             emitter.complete();
-            emitters.remove(emitter);
+            removeEmitter(usuarioId, emitter);
         });
 
         emitter.onError(ex -> {
-            log.warn("Erro no emitter: {}. Removendo.", ex.getMessage());
-            emitters.remove(emitter);
+            log.warn("Erro no emitter do usuário {}: {}. Removendo.", usuarioId, ex.getMessage());
+            removeEmitter(usuarioId, emitter);
         });
 
-        // Envia um evento inicial para confirmar a conexão ao cliente
         try {
             emitter.send(SseEmitter.event().comment("connected"));
         } catch (IOException e) {
-            log.warn("Falha ao enviar confirmação de conexão: {}", e.getMessage());
-            emitters.remove(emitter);
+            log.warn("Falha ao enviar confirmação de conexão para usuário {}: {}", usuarioId, e.getMessage());
+            removeEmitter(usuarioId, emitter);
         }
 
-        log.info("Cliente conectado. Total de clientes ativos: {}", emitters.size());
+        log.info("Cliente conectado para usuário {}. Total de clientes para usuário: {}",
+                usuarioId, emittersByUser.getOrDefault(usuarioId, List.of()).size());
         return emitter;
     }
 
-    // ── Envio de notificação ──────────────────────────────────────────────────
+    private void removeEmitter(Long usuarioId, SseEmitter emitter) {
+        List<SseEmitter> list = emittersByUser.get(usuarioId);
+        if (list != null) {
+            list.remove(emitter);
+            if (list.isEmpty()) {
+                emittersByUser.remove(usuarioId);
+            }
+        }
+    }
+
+    // ── Envio de notificação para usuário específico ──────────────────────────
 
     public void sendNotification(Notificacao notificacao, Agendamento agendamento) {
-        if (emitters.isEmpty()) {
-            log.info("Nenhum cliente SSE conectado. Notificação não enviada.");
+        if (agendamento == null || agendamento.getUsuario() == null || agendamento.getUsuario().getId() == null) {
+            log.warn("Agendamento sem usuário associado. SSE não enviado.");
+            return;
+        }
+
+        Long usuarioId = agendamento.getUsuario().getId();
+        List<SseEmitter> userEmitters = emittersByUser.get(usuarioId);
+
+        if (userEmitters == null || userEmitters.isEmpty()) {
+            log.info("Nenhum cliente SSE conectado para usuário {}. Notificação não enviada.", usuarioId);
             return;
         }
 
@@ -68,66 +87,50 @@ public class ServerSentEventService {
 
         List<SseEmitter> deadEmitters = new ArrayList<>();
 
-        for (SseEmitter emitter : emitters) {
+        for (SseEmitter emitter : userEmitters) {
             try {
                 emitter.send(SseEmitter.event().data(message));
-
             } catch (IllegalStateException e) {
-                // Spring encapsula "Broken pipe" / "Túnel quebrado" aqui
-                // O emitter já está morto — remove silenciosamente
-                log.warn("Emitter inativo (IllegalStateException): {}. Removendo.", e.getMessage());
+                log.warn("Emitter inativo (IllegalStateException) para usuário {}: {}. Removendo.", usuarioId, e.getMessage());
                 deadEmitters.add(emitter);
-
             } catch (IOException e) {
-                // Falha de I/O direta (conexão fechada, reset, etc.)
-                log.warn("Falha de I/O no emitter: {}. Removendo.", e.getMessage());
+                log.warn("Falha de I/O no emitter do usuário {}: {}. Removendo.", usuarioId, e.getMessage());
                 deadEmitters.add(emitter);
-
             } catch (Exception e) {
-                // Qualquer outra falha inesperada — loga com stack trace completo
-                log.error("Erro inesperado ao enviar SSE para emitter. Removendo.", e);
+                log.error("Erro inesperado ao enviar SSE para usuário {}. Removendo.", usuarioId, e);
                 deadEmitters.add(emitter);
             }
         }
 
         if (!deadEmitters.isEmpty()) {
-            emitters.removeAll(deadEmitters);
-            log.info("{} emitter(s) removido(s). Total ativo: {}", deadEmitters.size(), emitters.size());
+            userEmitters.removeAll(deadEmitters);
+            if (userEmitters.isEmpty()) {
+                emittersByUser.remove(usuarioId);
+            }
+            log.info("{} emitter(s) removido(s) para usuário {}.", deadEmitters.size(), usuarioId);
         }
     }
 
-    // ── Heartbeat (opcional mas recomendado) ──────────────────────────────────
+    // ── Heartbeat por usuário ────────────────────────────────────────────────
 
-    /**
-     * Chame este método via @Scheduled a cada 25-30s para manter conexões vivas
-     * e detectar clientes desconectados antes de uma notificação real falhar.
-     * <p>
-     * Exemplo no seu scheduler:
-     *
-     * @Scheduled(fixedDelay = 25_000)
-     * public void heartbeat() {
-     * sseService.sendHeartbeat();
-     * }
-     */
     public void sendHeartbeat() {
-        if (emitters.isEmpty()) return;
+        if (emittersByUser.isEmpty()) return;
 
-        List<SseEmitter> deadEmitters = new ArrayList<>();
-
-        for (SseEmitter emitter : emitters) {
-            try {
-                emitter.send(SseEmitter.event().comment("heartbeat"));
-            } catch (IllegalStateException | IOException e) {
-                log.debug("Heartbeat falhou (cliente desconectado). Removendo emitter.");
-                deadEmitters.add(emitter);
-            } catch (Exception e) {
-                log.warn("Erro inesperado no heartbeat. Removendo emitter.", e);
-                deadEmitters.add(emitter);
+        emittersByUser.forEach((usuarioId, userEmitters) -> {
+            List<SseEmitter> deadEmitters = new ArrayList<>();
+            for (SseEmitter emitter : userEmitters) {
+                try {
+                    emitter.send(SseEmitter.event().comment("heartbeat"));
+                } catch (Exception e) {
+                    deadEmitters.add(emitter);
+                }
             }
-        }
-
-        if (!deadEmitters.isEmpty()) {
-            emitters.removeAll(deadEmitters);
-        }
+            if (!deadEmitters.isEmpty()) {
+                userEmitters.removeAll(deadEmitters);
+                if (userEmitters.isEmpty()) {
+                    emittersByUser.remove(usuarioId);
+                }
+            }
+        });
     }
 }

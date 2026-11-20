@@ -72,6 +72,7 @@ public class NotificacaoObserver {
                 .titulo("Próxima Sessão: " + agendamento.getCliente())
                 .mensagem(mensagem)
                 .agendamento(agendamento)
+                .usuario(agendamento.getUsuario())
                 .tipo(TipoNotificacao.NORMAL)
                 .severidade("INFORMATIVO")
                 .entidadeTipo("APPOINTMENT")

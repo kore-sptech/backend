@@ -41,15 +41,18 @@ public class AgendamentoController {
     })
     @GetMapping
     public ResponseEntity<List<AgendamentoResponseDTO>> listar(
-            @RequestParam(name = "inicio", required = false) String inicio,
-            @RequestParam(name = "fim", required = false) String fim,
+            @RequestParam(name = "inicio") String inicio,
+            @RequestParam(name = "fim") String fim,
             @AuthenticationPrincipal Usuario usuario
 
     ) {
-
-        return ResponseEntity.ok(agendamentoService.listarEntreDatas(
-                LocalDateTime.parse(inicio, DateTimeFormatter.ISO_DATE_TIME),
-                LocalDateTime.parse(fim, DateTimeFormatter.ISO_DATE_TIME), usuario));
+        try {
+            LocalDateTime inicioDateTime = LocalDateTime.parse(inicio, DateTimeFormatter.ISO_DATE_TIME);
+            LocalDateTime fimDateTime = LocalDateTime.parse(fim, DateTimeFormatter.ISO_DATE_TIME);
+            return ResponseEntity.ok(agendamentoService.listarEntreDatas(inicioDateTime, fimDateTime, usuario));
+        } catch (java.time.format.DateTimeParseException exception) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @Operation(summary = "Atualizar agendamento", description = "Atualiza os dados de um agendamento existente")
