@@ -1,11 +1,12 @@
 services:
   database:
     image: mysql:9
-    user: "0:0"
+    user: "1000:1000"
     environment:
-      MYSQL_ROOT_PASSWORD: ""
-      MYSQL_ALLOW_EMPTY_PASSWORD: yes
-      MYSQL_DATABASE: test
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: kore_db
+      MYSQL_USER: ${MYSQL_USER:?MYSQL_USER is required}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
       MYSQL_LOWER_CASE_TABLE_NAMES: "1"
       TZ: America/Sao_Paulo
     ports:
@@ -15,6 +16,7 @@ services:
       - /var/run/mysqld
     volumes:
       - MYSQL_DATA_DEV:/var/lib/mysql:z
+      - ./mysql-init:/docker-entrypoint-initdb.d:ro
       # - ./kore/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:z
     healthcheck:
       test:
@@ -46,13 +48,14 @@ services:
       # porta de debug remoto (attach do IDE), opcional
       - "5005:5005"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test?serverTimezone=America/Sao_Paulo
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ""
-      JWT_SECRET: ${JWT_SECRET:-my-secret-key}
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/kore_db?serverTimezone=America/Sao_Paulo
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:?MYSQL_USER is required}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       FRONT_END_URL: ${FRONT_END_URL:-http://localhost:5173}
       TZ: America/Sao_Paulo
-      JAVA_TOOL_OPTIONS: -Duser.timezone=America/Sao_Paulo
+      JAVA_TOOL_OPTIONS: -Duser.timezone=America/Sao_Paulo -XX:MaxRAMPercentage=75.0
     volumes:
       # live reload: o código do host é montado no container; o
       # dev-entrypoint.sh observa src/ e recompila a cada alteração,
@@ -77,14 +80,12 @@ services:
     image: kore-notification:dev
     env_file:
       - .env
-    ports:
-      - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/test?serverTimezone=America/Sao_Paulo
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ""
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/notification_db?serverTimezone=America/Sao_Paulo
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:?MYSQL_USER is required}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
       TZ: America/Sao_Paulo
-      JAVA_TOOL_OPTIONS: -Duser.timezone=America/Sao_Paulo
+      JAVA_TOOL_OPTIONS: -Duser.timezone=America/Sao_Paulo -XX:MaxRAMPercentage=75.0
 
     volumes:
       - ./notification:/app:z
@@ -98,9 +99,14 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?RABBITMQ_DEFAULT_USER is required}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?RABBITMQ_DEFAULT_PASS is required}
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - RABBITMQ_DATA_DEV:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "status"]
       interval: 10s
@@ -110,4 +116,5 @@ services:
 
 volumes:
   MYSQL_DATA_DEV:
+  RABBITMQ_DATA_DEV:
   maven_repo:
