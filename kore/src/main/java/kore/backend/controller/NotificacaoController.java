@@ -9,7 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kore.backend.config.OpenApiConfig;
 import kore.backend.model.Notificacao;
 import kore.backend.model.Usuario;
-import kore.backend.repository.NotificacaoRepository;
+import kore.backend.service.NotificacaoService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -19,15 +20,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/notificacoes")
+@RequiredArgsConstructor
 @Tag(name = "Notificações", description = "Gestão, consulta e ações interativas das notificações do estúdio")
 @SecurityRequirement(name = OpenApiConfig.SECURITY_SCHEMA_NAME)
 public class NotificacaoController {
 
-    private final NotificacaoRepository notificacaoRepository;
-
-    public NotificacaoController(NotificacaoRepository notificacaoRepository) {
-        this.notificacaoRepository = notificacaoRepository;
-    }
+    private final NotificacaoService notificacaoService;
 
     @Operation(summary = "Listar notificações", description = "Lista todas as notificações registradas no sistema para o tatuador logado")
     @ApiResponses(value = {
@@ -36,7 +34,7 @@ public class NotificacaoController {
     })
     @GetMapping
     public ResponseEntity<List<Notificacao>> listar(@AuthenticationPrincipal Usuario usuario) {
-        List<Notificacao> notificacoes = notificacaoRepository.findAll();
+        List<Notificacao> notificacoes = notificacaoService.listar(usuario);
         return ResponseEntity.ok(notificacoes);
     }
 
@@ -50,10 +48,7 @@ public class NotificacaoController {
     public ResponseEntity<Notificacao> marcarComoLida(
             @Parameter(description = "ID da notificação", required = true) @PathVariable Long id,
             @AuthenticationPrincipal Usuario usuario) {
-        Notificacao notificacao = notificacaoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Notificação não encontrada: " + id));
-        notificacao.setLida(true);
-        notificacaoRepository.save(notificacao);
+        Notificacao notificacao = notificacaoService.marcarComoLida(id, usuario);
         return ResponseEntity.ok(notificacao);
     }
 
@@ -67,10 +62,7 @@ public class NotificacaoController {
     public ResponseEntity<Void> ignorar(
             @Parameter(description = "ID da notificação", required = true) @PathVariable Long id,
             @AuthenticationPrincipal Usuario usuario) {
-        Notificacao notificacao = notificacaoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Notificação não encontrada: " + id));
-        notificacao.setLida(true);
-        notificacaoRepository.save(notificacao);
+        notificacaoService.ignorar(id, usuario);
         return ResponseEntity.ok().build();
     }
 
@@ -81,16 +73,6 @@ public class NotificacaoController {
     })
     @GetMapping("/resumo")
     public ResponseEntity<Map<String, Long>> resumo(@AuthenticationPrincipal Usuario usuario) {
-        List<Notificacao> todas = notificacaoRepository.findAll();
-        long critico = todas.stream().filter(n -> "CRITICO".equalsIgnoreCase(n.getSeveridade())).count();
-        long atencao = todas.stream().filter(n -> "ATENCAO".equalsIgnoreCase(n.getSeveridade())).count();
-        long informativo = todas.stream().filter(n -> "INFORMATIVO".equalsIgnoreCase(n.getSeveridade()) || n.getSeveridade() == null).count();
-
-        Map<String, Long> resumoMap = Map.of(
-                "CRITICO", critico,
-                "ATENCAO", atencao,
-                "INFORMATIVO", informativo
-        );
-        return ResponseEntity.ok(resumoMap);
+        return ResponseEntity.ok(notificacaoService.resumo(usuario));
     }
 }

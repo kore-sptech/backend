@@ -9,6 +9,7 @@ import kore.backend.service.UsuarioService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,6 +70,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "204", description = "Nenhum usuário cadastrado")
     })
     @GetMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UsuarioResponseDTO>> buscartodos() {
         List<Usuario> p = usuarioService.buscartodos();
         return ResponseEntity.ok(UsuarioMapper.toResponseList(p));
