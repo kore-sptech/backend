@@ -10,7 +10,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Pull Docker image
-        run: docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/NOME-DA-IMAGEM-BACKEND:latest
+        run: docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/kore-backend:latest
 
       - name: Stop Docker container
         run: docker stop app-backend || true
@@ -19,4 +19,4 @@ jobs:
         run: docker rm app-backend || true
 
       - name: Run Docker container
-        run: docker run --name app-backend -d -p 8080:8080 ${{ secrets.DOCKER_HUB_USERNAME }}/NOME-DA-IMAGEM-BACKEND:latest
+        run: docker run --name app-backend -d -p 8080:8080 ${{ secrets.DOCKER_HUB_USERNAME }}/kore-backend:latest
